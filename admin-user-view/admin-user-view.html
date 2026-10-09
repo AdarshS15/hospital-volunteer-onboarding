@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volunteer Learning Hub</title>
+
+    <!-- Google Fonts Preconnect (makes loading faster) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <script src="https://tailwindcss.com"></script>
+    <!-- Connect to css file styles.css -->
+    <link rel="stylesheet" href="admin-user-view.css">
+    <link rel="stylesheet" href="../shared-items/sidebar.css">
+    <link rel="stylesheet" href="../shared-items/tagSetup.css">
+</head>
+<body>
+
+    <div class="admin-dashboard-page">
+        <div id="sidebar-container">
+
+        </div>
+
+        <main class="main-content">
+            <header class="top-admin-user-view">
+                <h4>Admin User View</h4>
+                <div class="user-top-right-div">
+                    <div class="user-circle">
+                        <h5>AS</h5>
+                    </div>
+                    <h5 class="volunteer-name">Thomas Sterling</h5>
+                </div>
+                
+            </header>
+            <div class="admin-user-view-content">
+                <div class="admin-content-top">
+                    <div class="user-title-div">
+                        <h2>Users</h2>
+                        <span>View volunteer training progress and assessment results.</span>
+                    </div>
+                    <!-- <button class="purple-button export-cv">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentcolor" class="size-6" width="15px" height="15px">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                        </svg>
+
+                        Export CSV
+                    </button> -->
+                    
+                </div>
+                <div class="main-content-grid">
+                    <div class="admin-filters-div">
+                        <div class="user-search-input-div">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" class="size-6" width="17px" height="17px">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                            </svg>
+                            <input type="text" id="admin-user-search" placeholder="Search Users..." class="user-search-input">
+                        </div>
+                        <fieldset class="user-status-dropdown-div">
+                            <legend>Status</legend>
+                                <select id="admin-status-filter">
+                                    <option>All Statuses</option>
+                                    <option>Completed</option>
+                                    <option>In Progress</option>
+                                    <option>Not Started</option>
+                                </select>
+                        </fieldset>
+                        <fieldset class="user-passed-dropdown-div">
+                            <legend>Passed</legend>
+                                <select id="admin-passed-filter">
+                                    <option>All</option>
+                                    <option>Passed</option>
+                                    <option>Not Passed</option>
+                                    <option>pending</option>
+                                </select>
+                        </fieldset>
+                        <fieldset class="user-module-progress-dropdown-div">
+                            <legend>Module Progress</legend>
+                                <select id="admin-progress-filter">
+                                    <option>All Progress</option>
+                                    <option>0–2 Modules</option>
+                                    <option>3–5 Modules</option>
+                                    <option>6–8 Modules</option>
+                                    <option>9-10 Modules Completed</option>
+                                </select>
+                        </fieldset>
+                    </div>
+                    <div class="admin-metrics-div">
+                        <div class="admin-metrics-div-container">
+                            <div class="admin-metrics-div-section">
+                                <div class="icon-circle">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5   " stroke="#4A2DBF" class="size-6" width="25px" heigth="25px">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
+                                    </svg>
+
+                                </div>
+                                <div class="admin-metrics-div-text">
+                                    <h4>##</h4>
+                                    <h5>Total Users</h5>
+                                </div>
+                            </div>
+
+                            <div class="admin-metrics-div-section">
+                                <div class="icon-circle">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="#4A2DBF" class="size-6" width="25px" heigth="25px">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443m-7.007 11.55A5.981 5.981 0 0 0 6.75 15.75v-1.5" />
+                                    </svg>
+                                </div>
+                                <div class="admin-metrics-div-text">
+                                    <h4>##</h4>
+                                    <h5>Completed All Modules</h5>
+                                </div>
+                            </div>
+
+                            
+                            <div class="admin-metrics-div-section">
+                                <div class="icon-circle">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="#4A2DBF" class="size-6" width="25px" heigth="25px">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                    </svg>
+                                </div>
+                                <div class="admin-metrics-div-text">
+                                    <h4>## (##%)</h4>
+                                    <h5>Passed Post Quiz</h5>
+                                </div>
+                            </div>
+
+                            <div class="admin-metrics-div-section">
+                                <div class="icon-circle">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="#4A2DBF" class="size-6" width="25px" heigth="25px">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                    </svg>
+
+                                </div>
+                                <div class="admin-metrics-div-text">
+                                    <h4>##h ##m</h4>
+                                    <h5>Total Training Time</h5>
+                                </div>
+                            </div>
+                            
+                            <div class="admin-metrics-div-section no-border-right">
+                                <div class="icon-circle ">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="#4A2DBF" class="size-6" width="25px" heigth="25px">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941" />
+                                    </svg>
+
+                                </div>
+                                <div class="admin-metrics-div-text">
+                                    <h4>+##%</h4>
+                                    <h5>Avg. Improvement</h5>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="admin-user-info-div">
+                        <div class="user-info-subsection-title">
+                            <h6>NAME</h6>
+                            <h6>EMAIL</h6>
+                            <h6 class="thinner-subsection">MODULES COMPLETED</h6>
+                            <h6 class="thinner-subsection">PRE-QUIZ SCORE</h6>
+                            <h6 class="thinner-subsection">POST-QUIZ SCORE</h6>
+                            <h6>IMPROVEMENT</h6>
+                            <h6>PASSED</h6>
+                            <h6>STATUS</h6>
+                            <h6>LAST ACTIVITY</h6>
+                        </div>
+                        <template class="admin-user-template">
+                            <div class="user-info-subsection">
+                                <div class="user-name-cell">
+                                    <div class="user-name-circle">
+                                        <h5>AS</h5>
+                                    </div>
+                                    <h6>FirstName LastName</h6>
+                                </div>
+                                <div class="user-email-cell">
+                                    <h6 class="grey">username@commonspirit.org</h6>
+                                </div>
+                                <div class="user-completed-modules-cell">
+                                    <h6>8/8</h6>
+                                </div>
+                                <div class="quiz-score-cell pre-quiz-cell">
+                                    <h6>72%</h6>
+                                </div>
+                                <div class="quiz-score-cell post-quiz-cell">
+                                    <h6 class="green">72%</h6>
+                                </div>
+                                <div class="user-improvement-cell">
+                                    <h6>+20%</h6>
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentcolor" class="improvement" width="15px" height="15px">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18" />
+                                    </svg>
+                                </div>
+                                <div class="user-passed-cell">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="#16A34A" class="passed" width="20px" height="20px">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                    </svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="#DC2626" class="not-passed" width="20px" height="20px">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                    </svg>
+                                </div>
+                                <div class="user-status-cell">
+                                    <h6>Completed</h6>
+                                </div>
+                                <div class="user-activity-cell">
+                                    <h6 class="thinner-subsection">May 27, 2026 10:15 AM </h6>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                
+        </main>
+
+    </div>
+    <!-- Connect to javascript file script.js  -->
+    <script type="module" src="../javascript/script.js"></script>
+</body>

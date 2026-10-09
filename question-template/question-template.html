@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volunteer Learning Hub</title>
+
+    <!-- Google Fonts Preconnect (makes loading faster) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <script src="https://tailwindcss.com"></script>
+    <!-- Connect to css file styles.css -->
+    <link rel="stylesheet" href="question-template.css">
+    <link rel="stylesheet" href="../shared-items/tagSetup.css">
+</head>
+<body>
+    <div class="quiz-page">
+        <header class="top-quiz-template">
+            <a class="white-button exit-button">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6" width=20px >
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+                </svg>
+                <h5>Exit Quiz</h5>
+            </a>
+            <div class="center-header-title">
+                <h4>Knowledge Check</h4>
+                <h5>Module #: Module Subtitle</h5>
+            </div>
+            <div class="question-number-title">
+                <h5>Question # of #</h5>
+            </div>
+        </header>
+        
+        <div class="main-content">
+            <div class="progress-bar-gray">
+                <div class="progress-bar-purple">
+                    <div class="progress-label">40% Complete</div>
+                </div>
+            </div>
+            <div class="question-div">
+                <h5 class="question-number">Question #</h5>
+                <h3 class="question-text">Which of the following...?</h3>
+                <div class="four-answer-choices">
+                    <button class="answer-choice" data-answer="A">
+                        <div class="letter-box">
+                            <h3>A</h3>
+                        </div>
+                        <span>akfldsadsjfdlakfdsj;fldsfjda;lkfdsf;ldsk</span>
+                    </button>
+                    <button class="answer-choice" data-answer="B">
+                        <div class="letter-box">
+                            <h3>B</h3>
+                        </div>
+                        <span>akfldsadsjfdlakfdsj;fldsfjda;lkfdsf;ldsk</span>
+                        
+                    </button>
+
+                    <button class="answer-choice" data-answer="C">
+                        <div class="letter-box">
+                            <h3>C</h3>
+                        </div>
+                        <span>akfldsadsjfdlakfdsj;fldsfjda;lkfdsf;ldsk</span>
+                    </button>
+
+                    <button class="answer-choice" data-answer="D">
+                        <div class="letter-box">
+                            <h3>D</h3>
+                        </div>
+                        <span>akfldsadsjfdlakfdsj;fldsfjda;lkfdsf;ldsk</span>
+                    </button>
+                    <div class="answer-status">
+                        <div class="result-icon-circle">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="white" class="wrong-answer-svg" width="18px">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                            </svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="white" class="correct-answer-svg"  width="18px"  display="none">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                            </svg>
+                        </div>
+                        <div class="answer-bubble">
+                            <h5>Your Answer</h5>
+                        </div>
+                    </div>
+                    
+                </div> 
+                <div class="question-explanation">
+                    <div class="icon-div">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="#2563EB" class="size-6" width=30px>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                        </svg>
+                    </div>
+                    <div class="explanation-text">
+                        <h5>Explanation</h5>
+                        <span class="correct-explain">
+                            Blah is correct becausea;dslkfadsjfdasfl;adsfjadsl;fkdsaj;lfdaskjf;dslkfajd;lf 
+                            faldj;lfakdjf;l  ;lfkadjf;ladskfjdsl;fkjads;lfk adl;fkjad;l f dsfla jkdf;la dk;flja ;dslfk ak;lds f;d fl;ads fklaj ;
+                        </span>
+                        <span class="incorrect-explain">
+                            Blah is incorrect because daf;lkdj;afdsk  f;alkjd;sfad sjf;l d fa;ldkjfa;ldkfja sd;l ;ldkafj;ldskf a;lkds fj;aldks j
+                            adlfajsdk;fkadsj;flkdsjf;ladskfjasd;lkfadsj;fladskjf;dslkfjads;lfkasjdf; d;alkfjds;lfkaj d ds;lfjads;lfkasj  ad;ljfka;dslfk a; 
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <footer class="question-footer">
+            <a class="purple-button back-button">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6" width="20px">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+                </svg>
+                Back
+            </a>
+             
+            <span>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="#4A2DBF" class="size-6" width="25px" height="25px">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+                </svg>
+                You must complete this quiz in one sitting; It doesn't save progress! 
+            </span>
+            <div class="next-submit-buttons">
+                <a class="purple-button next-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6" width="20px">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                    </svg>
+
+                    Next
+                </a>
+                <a class="purple-button submit-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6" width="20px">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                    </svg>
+
+                    submit
+                </a>
+            </div>
+            
+            
+            
+        </footer>
+    </div>
+        <!-- Connect to javascript file script.js  -->
+    <script type="module" src="../javascript/script.js"></script>
+</body>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volunteer Learning Hub</title>
+
+    <!-- Google Fonts Preconnect (makes loading faster) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Connect to css file styles.css -->
+    <link rel="stylesheet" href="create-account.css">
+    <link rel="stylesheet" href="../shared-items/tagSetup.css">
+</head>
+<body>
+    <img src="../images/create-account-wave.png" alt="wave logo" class="create-account-background">
+    <div class="create-account-page">
+        <div class="left-create-account-div">
+            <div class="hospital-logo-text">
+                <img src="../images/hospital-logo.png" alt="Hospital cross logo" class="hospital-logo">
+                <div class="hospital-name">
+                    <h5>CommonSpirit Health</h5>
+                    <h2>Volunteer Learning Portal</h2>
+                    <p>St. Anthony North Hospital</p>
+                </div>
+            </div>
+            <div class="horizontal-line"></div>
+            <div class="paragraph-image-div">
+                <p>
+                    Empowering our volunteers with the knowledge 
+                    and confidence to serve, grow, and make meaningful 
+                    impact in every interaction.
+                </p>
+                <img src="../images/create-account-left-image.png" alt="Books logo" class="create-account-left-image-logo">
+            </div>
+        </div>
+        <div class="right-login-div">
+            <div class="login-feature-card">
+                <div class="top-login-feature-card">
+                    <div class="icon-circle">
+                        <img src="../images/user-icon.png" alt="real-life" class="user-icon">
+                    </div>
+                    <h3>Create Your Account</h3>
+                    
+                </div>
+                <div class="login-entries">
+                    
+                    <div class="name-input-div">
+                        <label for="name">Name</label>
+                        <div class="input-div">
+                            <img src="../images/email-icon.png" alt="real-life" class="input-email-icon">
+                            <input type="name" id="name" name="name" placeholder="Enter your full name" required>
+                        </div>
+                    </div>
+
+                    <div class="email-input-div">
+                        <label for="email">Email</label>
+                        <div class="input-div">
+                            <img src="../images/email-icon.png" alt="real-life" class="input-email-icon">
+                            <input type="email" id="email" name="email" placeholder="Enter your Email Addresss" required>
+                        </div>
+                    </div>
+
+                    <div class="password-input-div">
+                        <label for="password">Password</label>
+                        <div class="input-div">
+                            <img src="../images/user-icon.png" alt="real-life" class="input-lock-icon">
+                            <input type="password" id="password" name="password" placeholder="Enter Your Password" required>
+                            <img src="../images/user-icon.png" alt="real-life" class="input-eye-icon">
+                        </div>
+                    </div>
+                    <div class="password-input-div">
+                        <label for="password">Password Confirmation</label>
+                        <div class="input-div">
+                            <img src="../images/user-icon.png" alt="real-life" class="input-lock-icon">
+                            <input type="password" id="confirmPassword" name="password" placeholder="Confirm Your Password" required>
+                            <img src="../images/user-icon.png" alt="real-life" class="input-eye-icon">
+                        </div>
+                        <p id="email-error"></p>
+                    </div>
+                </div>
+                <div class="buttons-section">
+                    <div class="signup-div">
+                        <a id="signup-button" class="signup-button purple-button"> 
+                            <img src="../images/user-icon.png" alt="User Icon" class="create-account-logo">
+                            Create an Account
+                        </a>
+                    </div>
+                    <div class="help-div">
+                        <h5> Already have an account? </h5>
+                        <a href="../login-page/login.html" class="login-button">Log in</a> 
+                    </div>
+                </div>
+            </div>
+            
+        
+        </div>
+    </div>
+            <!-- Connect to javascript file script.js  -->
+    <script type="module" src="../javascript/script.js"></script>
+</body>
+</html>

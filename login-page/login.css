@@ -1,0 +1,600 @@
+/* ==========================================
+   Applies to every element on the page
+   ========================================== */
+
+/* Makes width/height calculations easier */
+* {
+    box-sizing: border-box;
+}
+
+
+/* ==========================================
+   Main page
+   ========================================== */
+
+body {
+    margin: 0;                              /* Remove browser default margins */
+    font-family: "Outfit";        /* Default font */
+    background-color: #f6f2fe;              /* Light purple background */
+    font-family: "Calibri";
+    background-color: #ffffff;
+    overflow-x: hidden;
+    overflow-y: hidden;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: "Tahoma";
+    font-weight: 550;  
+    color: #162A63;
+    margin: 0px;
+    gap: 0px;
+    padding: 0px;
+    /* Step 1: Create a tiny blur around the sharp corners */
+    filter: blur(0.2px);
+    /* Step 2: Crisp up the edges while keeping the rounded corners */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+              
+}
+p {
+    margin: 0px;
+    gap: 0px;
+    padding: 0px;
+}
+.login-button, .signup-button {
+    border: none; 
+    font-weight: bold;
+    text-decoration: none;
+    font-family: "Calibri";
+    transition: 
+    background-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+
+} 
+#login-error {
+    position: absolute;
+    top: 100%;
+    left: 0;
+
+    color: red;
+    font-size: 12px;
+    margin-top: 5px;
+}
+.login-button:hover{
+    cursor: pointer;
+    background-color: #4A2DBF;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(74,45,191,0.25);
+}
+
+.signup-button:hover {
+    cursor: pointer;
+    background-color: #c3b8ed;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(74,45,191,0.25);
+}
+
+
+
+/* ==========================================
+   Login Section
+   ========================================== */
+
+.login-page {
+    display: flex;
+    align-items: center;
+}
+.left-login-div {
+    display: flex;
+    flex-direction: column; 
+    justify-content: flex-start; 
+    width: 50%;
+    min-height: 100vh;
+    background-color: #f0ebfe;
+     
+}
+
+/* Creates the inward cut */
+.left-login-div::after {
+    content: "";
+    position: absolute;
+
+    top: 50%;
+    transform: translateY(-50%);
+
+    right: -190px;
+
+    width: 1000px;
+    height: 230%;
+
+    background-color: #ffffff;
+    border-radius: 50%;
+    z-index: 1;
+}
+.hospital-logo-text {
+    display: flex;
+    margin: 40px 40px;   
+    gap: 20px;              
+
+
+}
+/* Holds the logo and hospital name */
+
+
+/* Hospital logo */
+.hospital-logo {
+    width: 80px;
+    height: 80px;
+    filter: invert(30%) sepia(93%) saturate(3750%) hue-rotate(243deg) brightness(83%) contrast(104%);
+    opacity: 75%;
+}
+
+
+.hospital-name h5 {
+    
+    margin: 2px;
+    font-size: 10px;
+    color: #A7A7A9;
+}
+.hospital-name h2 {
+    margin: 2px;
+    font-size: 23px;
+    color: #162A63;
+    width:200px
+}
+.hospital-name p {
+    margin: 2px;
+    font-size: 16px;
+    color: #4A2DBF;
+    font-weight: bold;
+}
+
+.welcome-div {
+    margin-left:90px;
+    display: flex;
+    flex-direction: column; 
+    justify-content: flex-start; 
+     
+}
+
+.welcome-title-div {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 15px;
+}
+
+.welcome-title-div p {
+    color: #7c7979;
+    font-weight: bold;
+    font-size:18px;
+    width: 300px;
+    line-height: 1.5;
+}
+
+.all-login-icon-text-div {
+    margin-top: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 20px;
+    
+}
+.login-icon-text-div {
+    display: flex;
+    align-items: center;
+    gap: 0px;
+}
+.login-icon-circle {
+    width: 70px;
+    height: 70px;
+    
+    background-color: #E5DAFF;
+    border-radius: 50%;
+
+    justify-content: center;
+    align-items: center;
+
+    display: flex;
+    
+
+}
+.login-bookcheck-icon {
+    height: 75px;
+    width: auto;
+    box-sizing: border-box;
+    filter: invert(19%) sepia(96%) saturate(5200%) hue-rotate(245deg) brightness(65%) contrast(115%);
+    opacity: 75%;
+}  
+.login-handshake-icon {
+    height: 50px;
+    width: auto;
+    box-sizing: border-box;
+    filter: invert(19%) sepia(96%) saturate(5200%) hue-rotate(245deg) brightness(65%) contrast(115%);
+    opacity: 75%;
+}  
+.login-impact-icon {
+    height: 70px;
+    width: auto;
+    box-sizing: border-box;
+    filter: invert(19%) sepia(96%) saturate(5200%) hue-rotate(245deg) brightness(65%) contrast(115%);
+    opacity: 75%;
+    transform: translateX(1.5px);     
+}  
+
+.login-step-text h4,.login-step-text p {
+    margin: 2.5px;
+    line-height: 1.25;
+    letter-spacing: 0.25px;
+}
+
+.login-step-text h4 {
+    color: #3F249E;
+    font-size:15px;
+    font-weight: 550;
+}
+.login-step-text p {
+    color: #7c7979;
+    font-weight: 550;
+    font-size:15px;
+}
+.login-step-text {
+    margin: 10px 20px;
+    width: 240px;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.right-login-div {
+    position: relative;
+    z-index: 5;
+
+}
+
+
+.login-feature-card {
+    width: 500px;
+    height: 600px;
+    padding: 20px;
+    border: 1px solid #bbbbbb;
+    border-radius: 18px;    
+    box-sizing: border-box;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    
+
+}
+
+.top-login-feature-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+
+    
+}
+
+
+.icon-circle {
+    width: 60px;
+    height: 60px;
+    
+    background-color: #E5DAFF;
+    border-radius: 50%;
+
+    justify-content: center;
+    align-items: center;
+
+    display: flex;
+    margin-left: auto;
+    margin-right: auto;
+
+}
+.user-icon {
+    height: 30px;
+    width: auto;
+    box-sizing: border-box;
+    filter: invert(19%) sepia(96%) saturate(5200%) hue-rotate(265deg) brightness(65%) contrast(115%);
+}
+
+.top-login-feature-card h3 {
+    font-size: 24px;
+}
+
+.top-login-feature-card p {
+    max-width: 300px;
+    font-size: 14px;
+    margin: 0 auto;
+    line-height: 1.5;
+    text-align: center;
+    color: #7c7979;
+}
+
+.login-entries {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    margin-left:30px; 
+    margin-top: 20px;
+    gap:20px
+}
+
+
+
+.email-input-div {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    gap: 8px;
+    width: 100%;
+}
+
+.email-input-div label {
+    font-size: 16px;
+    font-weight: 600;
+    color: #162A63;
+}
+
+
+
+.password-input-div {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    gap: 8px;
+    width: 100%;
+    position: relative;
+}
+.input-email-icon {
+    height: 20px;
+    width: auto;
+    box-sizing: border-box;
+    filter: invert(19%) sepia(96%) saturate(5200%) hue-rotate(265deg) brightness(65%) contrast(115%);
+    
+}
+.input-lock-icon {
+    height: 25px;
+    width: auto;
+    box-sizing: border-box;
+    filter: invert(19%) sepia(96%) saturate(5200%) hue-rotate(265deg) brightness(65%) contrast(115%);
+}
+
+.input-eye-icon {
+    height: 25px;
+    width: auto;
+    right: 10px;
+    box-sizing: border-box;
+    filter: invert(19%) sepia(96%) saturate(5200%) hue-rotate(265deg) brightness(65%) contrast(115%);
+}
+.password-input-div label {
+    font-size: 16px;
+    font-weight: 600;
+    color: #162A63;
+}
+
+
+.email-input-div input {
+    
+    font-family: "Arial";
+    font-size: 15px;
+    width: 90%;
+    display: flex;
+    align-items: center;
+    border: none;
+    outline: none;
+
+
+    
+}
+
+.password-input-div input {
+    
+    font-family: "Arial";
+    font-size: 15px;
+    width: 90%;
+    border: none;
+    outline: none;
+
+
+    
+}
+.input-div {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    width: 95%;
+    height: 50px;
+
+    padding: 0 15px;
+    box-sizing: border-box;
+
+    border: 1px solid #d4c4fb;
+    border-radius: 10px;
+
+    gap: 20px;
+
+
+}
+.forgot-password{
+    margin-top: 20px;
+    margin-left: 300px;
+    text-decoration: none;
+    background: none;                       /* Remove default button background */
+    font-size: 15px;
+    cursor: pointer;  
+    color: #4A2DBF;                       /* Cursor becomes a hand */
+    display: inline-block;
+    font-weight: bold;
+    font-family: "Calibri";
+    transition:
+    background-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.forgot-password:hover {
+    color: #4A2DBF;             /* Changes text color */
+    border: none;
+    box-shadow: none;
+    text-decoration: underline; /* Displays the underline */
+    text-underline-offset: 10px;
+    text-decoration-thickness: 2px;
+    transition: text-decoration-thickness 0.2s ease;
+    transform: translateY(-2px);
+}
+.buttons-section {
+    margin: 20px 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 12px;
+}
+.login-div {                      
+    margin: 0px;
+    display: flex;
+    justify-content: center; /* Centers the button horizontally */
+    width: 100%; 
+
+}     
+
+.signup-div {                      
+    margin: 0px;
+    display: flex;
+    justify-content: center; /* Centers the button horizontally */
+    width: 100%;             /* Spans full card width to push content inward */
+
+}     
+.login-button {
+    width: 400px;
+    background-color: #4A2DBF;                       
+    font-size: 14px;
+    color: #ffffff;
+    padding: 10px 20px;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+
+
+.or-separation {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+.or-separation p {
+    font-size: 14px;
+    font-weight:bold;
+    color: #7c7979;
+}
+.horizontal-footer-line {
+    opacity: 75%;
+    height: 2px;
+    width: 175px;
+
+    background: linear-gradient(to right, 
+        #d4c4fb 0%,
+        #5d00ff 50%,
+        #d4c4fb 100%);
+
+} 
+.signup-button {
+    width: 400px;
+    background-color: #ffffff;                       
+    font-size: 14px;
+    border: 1px solid #4A2DBF;
+    color: #4A2DBF;
+    padding: 10px 20px;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+
+}
+
+.create-account-logo {
+    width: 21px;
+    height: 21px;
+    padding-top: 2px;
+    
+
+}
+
+
+.help-div {
+    margin-top: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.help-div h5 {
+    margin: 10px 0px;
+    font-size: 14px;
+    color: #8b8383;
+}
+
+
+.help-div a {
+    margin: 0;
+    text-decoration: none;
+    background: none;                       /* Remove default button background */
+    cursor: pointer;  
+    color: #4A2DBF;                       /* Cursor becomes a hand */
+    font-weight: bold;
+    font-family: "Calibri";
+    transition:
+    background-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.help-div a:hover {
+    color: #4A2DBF;             /* Changes text color */
+    border: none;
+    box-shadow: none;
+    text-decoration: underline; /* Displays the underline */
+    text-underline-offset: 10px;
+    text-decoration-thickness: 2px;
+    transition: text-decoration-thickness 0.2s ease;
+    transform: translateY(-2px);
+}
+
+#forgot-password-form .buttons-section {
+    margin-top: 30px;
+}
+
+#forgot-password-form .login-button {
+    cursor: pointer;
+}
+
+#reset-message {
+    margin: 15px 30px;
+    font-size: 14px;
+    text-align: center;
+    color: #4A2DBF;
+}
+
+#reset-password-form .buttons-section {
+    margin-top: 30px;
+}
+
+#reset-password-form .login-button {
+    cursor: pointer;
+}
+
+#reset-password-form .password-input-div {
+    width: 100%;
+}

@@ -1,0 +1,414 @@
+
+body {
+    overflow-x: hidden;
+    overflow-y: hidden;
+}
+
+
+.create-account-background {
+    z-index: 1;
+    position: absolute;
+    width:100%;
+    height:100%;
+}
+/* ==========================================
+   Login Section
+   ========================================== */
+
+.create-account-page {
+    position: relative;
+    display: flex;
+    align-items: center;
+    z-index: 1000;
+}
+
+.left-create-account-div {
+    display: flex;
+    flex-direction: column; 
+    justify-content: flex-start; 
+    width: 50%;
+    min-height: 100vh;
+    margin-left:150px;
+    
+     
+}
+
+
+.hospital-logo-text {
+    display: flex;
+    margin: 80px 0px;   
+    margin-bottom: 30px;
+    gap: 15px;              
+
+
+}
+/* Holds the logo and hospital name */
+
+
+/* Hospital logo */
+.hospital-logo {
+    width: 85px;
+    height: 85px;
+    filter: invert(30%) sepia(93%) saturate(3750%) hue-rotate(243deg) brightness(83%) contrast(104%);
+    opacity: 75%;
+    transform: translateY(8px);
+}
+
+
+.hospital-name h5 {
+    
+    margin: 4px;
+    font-size: 10px;
+    color: #A7A7A9;
+}
+.hospital-name h2 {
+    margin: 4px;
+    font-size: 23px;
+    color: #162A63;
+    width:200px
+}
+.hospital-name p {
+    margin: 4px;
+    font-size: 16px;
+    color: #4A2DBF;
+    font-weight: bold;
+}
+
+.horizontal-line {
+    margin-top: 0px;
+    opacity: 75%;
+    height: 2px;
+    width: 300px;
+    background: linear-gradient(to right, 
+        #d4c4fb 0%,
+        #5d00ff 50%,
+        #d4c4fb 100%);
+
+} 
+.paragraph-image-div {
+    display: flex;
+    flex-direction: column; 
+    justify-content: flex-start;
+    gap:20px;
+    
+}
+.paragraph-image-div p {
+    font-size: 18px;
+    font-weight:bold;
+    color: #7c7979;
+    margin-top: 40px;
+    width: 310px;
+}
+.create-account-left-image-logo {
+    width: 250px;
+    height: 160px;
+    margin-left: 10px;
+}
+
+.right-login-div {
+    position: relative;
+    z-index: 5;
+    transform: translateX(-170px);
+}
+
+
+.login-feature-card {
+    width: 500px;
+    height: 600px;
+    padding: 20px;
+    border: 1px solid #f0e6ff;
+    border-radius: 18px;    
+    box-sizing: border-box;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 18px rgba(158, 152, 182, 0.25);
+    z-index: 10;
+}
+
+.top-login-feature-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 5px;
+
+    
+}
+
+
+.icon-circle {
+    width: 60px;
+    height: 60px;
+    
+    background-color: #E5DAFF;
+    border-radius: 50%;
+
+    justify-content: center;
+    align-items: center;
+
+    display: flex;
+    margin-left: auto;
+    margin-right: auto;
+
+}
+.user-icon {
+    height: 30px;
+    width: auto;
+    box-sizing: border-box;
+    filter: invert(19%) sepia(96%) saturate(5200%) hue-rotate(265deg) brightness(65%) contrast(115%);
+}
+
+.top-login-feature-card h3 {
+    font-size: 24px;
+}
+
+
+.login-entries {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    margin-left:10px; 
+    margin-top: 10px;
+    width: 100%;
+    gap:12px;
+    margin-bottom: 30px;
+    position: relative;
+}
+
+
+#email-error {
+    position: absolute;
+    top: 100%;
+    left: 0;
+
+    color: red;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+
+
+.email-input-div {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    gap: 8px;
+    width: 100%;
+}
+.name-input-div {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    gap: 8px;
+    width: 100%;
+}
+
+.email-input-div label {
+    font-size: 16px;
+    font-weight: 600;
+    color: #162A63;
+}
+
+
+
+.password-input-div {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    gap: 8px;
+    width: 100%;
+}
+.input-email-icon {
+    height: 20px;
+    width: auto;
+    box-sizing: border-box;
+    filter: invert(19%) sepia(96%) saturate(5200%) hue-rotate(265deg) brightness(65%) contrast(115%);
+    
+}
+.input-lock-icon {
+    height: 25px;
+    width: auto;
+    box-sizing: border-box;
+    filter: invert(19%) sepia(96%) saturate(5200%) hue-rotate(265deg) brightness(65%) contrast(115%);
+}
+
+.input-eye-icon {
+    height: 25px;
+    width: auto;
+    right: 10px;
+    box-sizing: border-box;
+    filter: invert(19%) sepia(96%) saturate(5200%) hue-rotate(265deg) brightness(65%) contrast(115%);
+}
+.password-input-div label {
+    font-size: 16px;
+    font-weight: 600;
+    color: #162A63;
+}
+
+
+.email-input-div input {
+    
+    font-family: "Arial";
+    font-size: 15px;
+    width: 90%;
+    display: flex;
+    align-items: center;
+    border: none;
+    outline: none;
+    background-color: #f8f5ff;
+
+
+    
+}
+.name-input-div label {
+    font-size: 16px;
+    font-weight: 600;
+    color: #162A63;
+}
+.name-input-div input {
+    
+    font-family: "Arial";
+    font-size: 15px;
+    width: 90%;
+    display: flex;
+    align-items: center;
+    border: none;
+    outline: none;
+    background-color: #f8f5ff;
+
+
+    
+}
+
+.password-input-div input {
+    
+    font-family: "Arial";
+    font-size: 15px;
+    width: 90%;
+    border: none;
+    outline: none;
+    background-color: #f8f5ff;
+
+
+    
+}
+.input-div {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    width: 95%;
+    height: 50px;
+
+    padding: 0 15px;
+    box-sizing: border-box;
+
+    border: 1px solid #d4c4fb;
+    border-radius: 10px;
+
+    gap: 20px;
+
+
+
+}
+/* .login-feature-card a{
+    /* margin-top: 20px;
+    margin-left: 300px;
+    text-decoration: none;
+    background: none;                       /* Remove default button background */
+    /* font-size: 15px;
+    cursor: pointer;  
+    color: #4A2DBF;                       /* Cursor becomes a hand */
+    /* display: inline-block; */
+    /* font-weight: bold;
+    font-family: "Calibri"; */
+    /* transition:
+    background-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease; */  
+*/
+
+/* .login-feature-card .login-button:hover {
+    color: #4A2DBF;             /* Changes text color */
+    /* border: none; */
+    /* box-shadow: none;
+    text-decoration: underline; Displays the underline */
+    /* text-underline-offset: 10px;
+    text-decoration-thickness: 2px; */
+    /* transition: text-decoration-thickness 0.2s ease;
+    transform: translateY(-2px); */
+*/
+.buttons-section {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 12px;
+
+}
+  
+ 
+.signup-button {
+    width: 95%;
+    box-sizing: border-box;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+.signup-div {
+    width: 100%;
+    margin-left: 10px;
+}
+
+
+.create-account-logo {
+    width: 21px;
+    height: 21px;
+    padding-top: 2px;
+    filter: invert(100%);
+    
+
+}
+
+.help-div {
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.help-div h5 {
+    margin: 0px 0px;
+    font-size: 14px;
+    color: #8b8383;
+}
+
+
+.help-div a {
+    margin: 0;
+    text-decoration: none;
+    background: none;                       /* Remove default button background */
+    cursor: pointer;  
+    color: #4A2DBF;                       /* Cursor becomes a hand */
+    font-weight: bold;
+    font-family: "Calibri";
+    transition:
+    background-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.help-div a:hover {
+    color: #4A2DBF;             /* Changes text color */
+    border: none;
+    box-shadow: none;
+    text-decoration: underline; /* Displays the underline */
+    text-underline-offset: 10px;
+    text-decoration-thickness: 2px;
+    transition: text-decoration-thickness 0.2s ease;
+    transform: translateY(-2px);
+}
