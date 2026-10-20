@@ -1,5 +1,9 @@
 import math
 import hashlib
+import os
+import smtplib
+import ssl
+from email.message import EmailMessage
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
@@ -278,6 +282,25 @@ def login(request: Request, user: UserLogin, response: Response, db=Depends(get_
     }
 
 
+def send_reset_email(recipient_email: str, reset_link: str):
+    sender = os.environ["SMTP_EMAIL"]
+    app_password = os.environ["SMTP_APP_PASSWORD"]
+
+    message = EmailMessage()
+    message["From"] = f"MediLearn Support <{sender}>"
+    message["To"] = recipient_email
+    message["Subject"] = "Reset your MediLearn password"
+    message.set_content(
+        f"Someone requested a password reset for your MediLearn account.\n\n"
+        f"Reset your password here:\n{reset_link}\n\n"
+        "This link expires in 30 minutes. If you didn't request this, ignore this email."
+    )
+
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=ssl.create_default_context(), timeout=15) as smtp:
+        smtp.login(sender, app_password)
+        smtp.send_message(message)
+
+
 class ForgotPasswordRequest(BaseModel):
     email: EmailStr
 
@@ -301,9 +324,11 @@ def forgot_password(request: Request, data: ForgotPasswordRequest, db=Depends(ge
         db.add(reset_record)
         db.commit()
 
-        # LOCAL DEVELOPMENT ONLY — replace with email delivery before deployment.
-        reset_link = f"http://127.0.0.1:5500/reset-password/reset-password.html?token={token}"
-        print(f"DEV ONLY password reset link: {reset_link}")
+        reset_link = f"https://medilearn-beta.duckdns.org/reset-password/reset-password.html?token={token}"
+        try:
+            send_reset_email(user.email, reset_link)
+        except (smtplib.SMTPException, OSError) as exc:
+            print(f"Password-reset email delivery failed: {type(exc).__name__}")
 
     return {"message": message}
 
