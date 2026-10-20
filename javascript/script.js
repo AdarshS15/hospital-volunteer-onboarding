@@ -1,3 +1,4 @@
+const API_BASE = window.location.port === "5500" ? "http://127.0.0.1:8000" : "/api";
 import { infographic } from "./st-anthony-north-infographic-data.js";
 import { infographicIcons } from "./st-anthony-north-infographic-data.js";
 import { miniQuizQuestions } from "./st-anthony-north-question-data.js";
@@ -202,7 +203,7 @@ function saveTrainingTime(seconds, leaving = false) {
 
     const data = JSON.stringify({ seconds });
 
-    fetch("http://127.0.0.1:8000/save-training-time", {
+    fetch(`${API_BASE}/save-training-time`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -226,7 +227,7 @@ async function fillSidebarContainer(page) {
             currentLink.classList.add('active');
             const logoutButton = document.querySelector(".log-out");
             logoutButton.onclick = async function() {
-                const response = await fetch("http://127.0.0.1:8000/logout", {
+                const response = await fetch(`${API_BASE}/logout`, {
                     method: "POST",
                     credentials: "include",
                     headers: {
@@ -242,7 +243,7 @@ async function fillSidebarContainer(page) {
 }
 
 async function updateModuleProgress(specificModule) {
-    const response = await fetch("http://127.0.0.1:8000/update-module-progress", {
+    const response = await fetch(`${API_BASE}/update-module-progress`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -263,7 +264,7 @@ async function updateQuizScores(quizType) {
         filteredQuizScores[`module${i}`]=specificQuiz[`module${i}`]
     }
     
-    const response = await fetch("http://127.0.0.1:8000/update-quiz-scores", {
+    const response = await fetch(`${API_BASE}/update-quiz-scores`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -281,7 +282,7 @@ async function updateQuizScores(quizType) {
 
 
 async function updateQuizAnswers(quizType) {
-    const response = await fetch("http://127.0.0.1:8000/update-quiz-answers", {
+    const response = await fetch(`${API_BASE}/update-quiz-answers`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -298,7 +299,7 @@ async function updateQuizAnswers(quizType) {
 }
 
 async function loadQuizReviewData(quizType, moduleID = null) {
-    let url = `http://127.0.0.1:8000/get-quiz-review?quiz_type=${quizType}`;
+    let url = `${API_BASE}/get-quiz-review?quiz_type=${quizType}`;
 
     if (moduleID !== null) {
         url += `&module_id=${moduleID}`;
@@ -354,7 +355,7 @@ async function createUserAccount() {
 
     async function registerUser(firstName, lastName, email, password) {
         const registerPage = document.querySelector(".create-account-page")
-        const response = await fetch("http://127.0.0.1:8000/register", {
+        const response = await fetch(`${API_BASE}/register`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -401,7 +402,7 @@ async function loginUser() {
     const email = loginPage.querySelector("#email").value.trim();
     const password = loginPage.querySelector("#password").value;
 
-    const response = await fetch("http://127.0.0.1:8000/login", {
+    const response = await fetch(`${API_BASE}/login`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -467,7 +468,7 @@ function forgotPasswordButtons() {
         message.textContent = "Processing request...";
 
         try {
-            const response = await fetch("http://127.0.0.1:8000/forgot-password", {
+            const response = await fetch(`${API_BASE}/forgot-password`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -518,7 +519,7 @@ function resetPasswordButtons() {
         message.textContent = "Resetting password...";
 
         try {
-            const response = await fetch("http://127.0.0.1:8000/reset-password", {
+            const response = await fetch(`${API_BASE}/reset-password`, {
                 method: "POST",
                 headers: {"Content-Type": "application/json"},
                 body: JSON.stringify({
@@ -736,7 +737,7 @@ Admin Dashboard Page
 =====================================================*/
 async function fillAdminDashboard() {
     async function loadAdminData() {
-        const response = await fetch("http://127.0.0.1:8000/get-admin-data", {
+        const response = await fetch(`${API_BASE}/get-admin-data`, {
             method: "GET",
             credentials: "include"
         });
@@ -863,7 +864,7 @@ function fillAdminUserRows(admin_user_data_li) {
     }
 }
 async function fillAdminMetrics() {
-    const response = await fetch("http://127.0.0.1:8000/get-admin-metrics", {
+    const response = await fetch(`${API_BASE}/get-admin-metrics`, {
         method: "GET",
         credentials: "include"
     });
@@ -1655,7 +1656,7 @@ function QuizButtons(moduleSelected, moduleData, quizQuestions, moduleAnswers, m
         const reviewing = sessionStorage.getItem("reviewQuiz") === "true";
 
         if (quizType === "postQuiz" && reviewing) {
-            const response = await fetch("http://127.0.0.1:8000/close-post-quiz-review", {
+            const response = await fetch(`${API_BASE}/close-post-quiz-review`, {
                 method: "POST",
                 credentials: "include",
                 headers: { "X-CSRF-Token": csrfToken }
@@ -1684,7 +1685,7 @@ function QuizButtons(moduleSelected, moduleData, quizQuestions, moduleAnswers, m
         const moduleID=moduleSelected.id;
         await updateQuizAnswers(quizType)
         
-        const response = await fetch("http://127.0.0.1:8000/submit-quiz", {
+        const response = await fetch(`${API_BASE}/submit-quiz`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -1804,7 +1805,7 @@ let trainingTimer = null;
 let csrfToken = null;
 
 async function checkLogin() {
-    const response = await fetch("http://127.0.0.1:8000/check-session", {
+    const response = await fetch(`${API_BASE}/check-session`, {
         method: "GET",
         credentials: "include"
     });
@@ -1818,7 +1819,7 @@ async function checkLogin() {
 
 
 async function loadCsrfToken() {
-    const response = await fetch(`http://127.0.0.1:8000/csrf-token`, {
+    const response = await fetch(`${API_BASE}/csrf-token`, {
         credentials: "include"
     });
     if (!response.ok) throw new Error("Failed to retrieve CSRF token.");
@@ -1827,7 +1828,7 @@ async function loadCsrfToken() {
 
 
 async function loadModuleData() {
-    const response = await fetch("http://127.0.0.1:8000/get-module-data", {
+    const response = await fetch(`${API_BASE}/get-module-data`, {
         method: "GET",
         credentials: "include"
     });
@@ -1847,7 +1848,7 @@ async function loadModuleData() {
 
 
 async function loadModuleQuizScores() {
-    const response = await fetch("http://127.0.0.1:8000/get-quiz-scores", {
+    const response = await fetch(`${API_BASE}/get-quiz-scores`, {
         method: "GET",
         credentials: "include"
     });
@@ -1858,7 +1859,7 @@ async function loadModuleQuizScores() {
 
 
 async function loadModuleQuizAnswers() {
-    const response = await fetch("http://127.0.0.1:8000/get-quiz-answers", {
+    const response = await fetch(`${API_BASE}/get-quiz-answers`, {
         method: "GET",
         credentials: "include"
     });
@@ -1867,7 +1868,7 @@ async function loadModuleQuizAnswers() {
 }
 
 async function getAdminStatus() {
-    const response = await fetch("http://127.0.0.1:8000/get-admin-status", {
+    const response = await fetch(`${API_BASE}/get-admin-status`, {
         method: "GET",
         credentials: "include"
     });
