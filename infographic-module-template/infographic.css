@@ -497,6 +497,10 @@
 
 }
 
+.icon-circle svg {
+    color: #4A2DBF;
+}
+
 .learning-remember {
     display: none;
 

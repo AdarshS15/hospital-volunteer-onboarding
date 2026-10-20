@@ -1,4 +1,5 @@
 import { infographic } from "./st-anthony-north-infographic-data.js";
+import { infographicIcons } from "./st-anthony-north-infographic-data.js";
 import { miniQuizQuestions } from "./st-anthony-north-question-data.js";
 import { preQuizQuestions } from "./st-anthony-north-question-data.js";
 import { postQuizQuestions } from "./st-anthony-north-question-data.js";
@@ -163,8 +164,58 @@ const defaultquizAnswers = {
     "miniQuiz": Array(40).fill(null)
 };
 
-function fillSidebarContainer(page) {
-    fetch("../shared-items/sidebar.txt")
+
+function startTrainingTimer() {
+    let trainingSeconds = 0;
+    let lastActivity = performance.now();
+    let lastTick = performance.now();
+
+    const updateActivity = () => {
+        lastActivity = performance.now();
+    };
+
+    ["mousemove", "keydown", "click", "scroll", "touchstart"].forEach(event => {
+        document.addEventListener(event, updateActivity);
+    });
+
+    const timer = setInterval(() => {
+        const now = performance.now();
+        const elapsed = (now - lastTick) / 1000;
+        lastTick = now;
+
+        if (!document.hidden && now - lastActivity < 60000) {
+            trainingSeconds += elapsed;
+        }
+    }, 1000);
+
+    return {
+        getSeconds: () => Math.floor(trainingSeconds),
+        stop: () => {
+            clearInterval(timer);
+            return Math.floor(trainingSeconds);
+        }
+    };
+}
+
+function saveTrainingTime(seconds, leaving = false) {
+    if (seconds <= 0) return;
+
+    const data = JSON.stringify({ seconds });
+
+    fetch("http://127.0.0.1:8000/save-training-time", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-Token": csrfToken
+        },
+        body: data,
+        keepalive: leaving
+    });
+}
+
+async function fillSidebarContainer(page) {
+    return fetch("../shared-items/sidebar.txt")
         .then(response => response.text())
         .then(html => {
 
@@ -177,7 +228,10 @@ function fillSidebarContainer(page) {
             logoutButton.onclick = async function() {
                 const response = await fetch("http://127.0.0.1:8000/logout", {
                     method: "POST",
-                    credentials: "include"
+                    credentials: "include",
+                    headers: {
+                        "X-CSRF-Token": csrfToken
+                    }
                 });
 
                 if (response.ok) {
@@ -191,7 +245,8 @@ async function updateModuleProgress(specificModule) {
     const response = await fetch("http://127.0.0.1:8000/update-module-progress", {
         method: "POST",
         headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "X-CSRF-Token": csrfToken
         },
         credentials: "include",
         body: JSON.stringify({
@@ -211,7 +266,8 @@ async function updateQuizScores(quizType) {
     const response = await fetch("http://127.0.0.1:8000/update-quiz-scores", {
         method: "POST",
         headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "X-CSRF-Token": csrfToken
         },
         credentials: "include",
         body: JSON.stringify(
@@ -228,7 +284,8 @@ async function updateQuizAnswers(quizType) {
     const response = await fetch("http://127.0.0.1:8000/update-quiz-answers", {
         method: "POST",
         headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "X-CSRF-Token": csrfToken
         },
         credentials: "include",
         body: JSON.stringify(
@@ -365,16 +422,33 @@ async function loginUser() {
         loginPage.querySelector("#password").value = "";
         return;
     }
-
+    
+    
     console.log("Login successful:", result);
     window.location.href = "../my-modules-page/my-modules.html";
+
 }
 
 async function loginUserButtons() {
     const loginUserButton=document.querySelector('.login-page .login-button');
+    const passwordShowButton=document.querySelector('.login-page .password-show-button');
+    const passwordHideButton=document.querySelector('.login-page .password-hide-button');
     loginUserButton.addEventListener("click", async function () {
         await loginUser()
     });
+
+    passwordShowButton.addEventListener("click", function () { 
+        passwordShowButton.style.display="none";
+        passwordHideButton.style.display="flex";
+        document.querySelector('.login-page #password').type="text";
+    });
+    passwordHideButton.addEventListener("click", function () { 
+        passwordShowButton.style.display="flex";
+        passwordHideButton.style.display="none";
+        document.querySelector('.login-page #password').type="password";
+    });
+
+
 }
 
 /*===================================================
@@ -395,7 +469,9 @@ function forgotPasswordButtons() {
         try {
             const response = await fetch("http://127.0.0.1:8000/forgot-password", {
                 method: "POST",
-                headers: {"Content-Type": "application/json"},
+                headers: {
+                    "Content-Type": "application/json"
+                },
                 body: JSON.stringify({email: email})
             });
 
@@ -584,7 +660,7 @@ function dashboardOverallProgressDiv(moduleData) {
     moduleData.forEach(module => {
         overallProgress+=module.progress;
     });
-    overallProgress/=(moduleData.length-1);
+    overallProgress/=(moduleData.length);
     dashboardProgress.querySelector('.percent-progress-div .percent-progress' ).textContent=`${Math.round(overallProgress)}%`;
     dashboardProgress.querySelector('.progress-bar-purple').style.width=`${Math.round(overallProgress)}%`;
     
@@ -664,11 +740,19 @@ async function fillAdminDashboard() {
             method: "GET",
             credentials: "include"
         });
+        if (!response.ok) {
+            console.error("Failed to load admin data:", response.status);
+            return null;
+        }
         return await response.json();
     }
     admin_users_data_li = await loadAdminData();
-    fillAdminUserRows(admin_users_data_li);
-    filterAdminUserRows(admin_users_data_li)
+    if (admin_users_data_li) {
+        fillAdminUserRows(admin_users_data_li);
+        filterAdminUserRows(admin_users_data_li);
+        await fillAdminMetrics()
+    }
+    
 }
 function filterAdminUserRows() {
     const searchInput = document.getElementById("admin-user-search");
@@ -778,26 +862,25 @@ function fillAdminUserRows(admin_user_data_li) {
         container.appendChild(moduleClone);
     }
 }
-// async function fillAdminMetrics() {
-//     const response = await fetch("http://127.0.0.1:8000/admin/metrics", {
-//         method: "GET",
-//         credentials: "include"
-//     });
+async function fillAdminMetrics() {
+    const response = await fetch("http://127.0.0.1:8000/get-admin-metrics", {
+        method: "GET",
+        credentials: "include"
+    });
 
-//     if (!response.ok) {
-//         console.error("Failed to load admin metrics:", response.status);
-//         return;
-//     }
+    if (!response.ok) {
+        console.error("Failed to load admin metrics:", response.status);
+        return;
+    }
 
-//     const metrics = await response.json();
+    const metrics = await response.json();
 
-//     document.querySelector("#total-users").textContent = metrics.totalUsers;
-//     document.querySelector("#completed-modules").textContent = metrics.completedAllModules;
-//     document.querySelector("#passed-post-quiz").textContent =
-//         `${metrics.passedPostQuiz} (${metrics.passedPostQuizPercentage}%)`;
-//     document.querySelector("#average-improvement").textContent =
-//         `${metrics.averageImprovement >= 0 ? "+" : ""}${metrics.averageImprovement}%`;
-// }
+    document.querySelector("#total-users").textContent = metrics.total_users;
+    document.querySelector("#completed-modules").textContent = `${metrics.average_required_completion}%`;
+    document.querySelector("#passed-post-quiz").textContent = metrics.passed_post_quiz;
+    document.querySelector("#total-training-time").textContent = metrics.total_training_time;
+    document.querySelector("#average-improvement").textContent = `${metrics.average_improvement > 0 ? "+" : ""}${metrics.average_improvement}%`;
+}
 
 
 /*===================================================
@@ -994,7 +1077,7 @@ function myModuleSummaryInformationDiv(moduleData) {
 
     moduleSummaryInformation.querySelector('.completed-modules').textContent=completedModules;
 
-    overallProgress/=(moduleData.length-1);
+    overallProgress/=(moduleData.length);
     moduleSummaryInformation.querySelector('.percent-progress' ).textContent=`${Math.round(overallProgress)}%`;
     moduleSummaryInformation.querySelector('.overall-progress-bar-purple').style.width=`${Math.round(overallProgress)}%`;
 }
@@ -1058,14 +1141,17 @@ async function fillInfographicPage(infographicModule, moduleData, subsectionNum)
         
         keyIdeaContainer.style.display="flex";
         keyIdeaContainer.innerHTML = "";
+        const infographicIconsModule=infographicIcons.find(module => module.module === infographicModule.module)
         for (let i=0; i<4; i++) {
             const moduleClone = template.content.cloneNode(true);
             console.log(infographicModule);
             moduleClone.querySelector('.key-idea-card h5').textContent=infographicModule.keyIdeaTitles[subsectionNum-1][i];
             moduleClone.querySelector('.key-idea-card .first-bullet').textContent=infographicModule.keyIdeaBullets[subsectionNum-1][i][0];
+            moduleClone.querySelector('.key-idea-card .icon-circle').innerHTML = `<i data-lucide="${infographicIconsModule.icons[subsectionNum-1][i]}"></i>`;
             moduleClone.querySelector('.key-idea-card .second-bullet').textContent=infographicModule.keyIdeaBullets[subsectionNum-1][i][1];
             keyIdeaContainer.appendChild(moduleClone);
         }
+        lucide.createIcons();
             
         
         // Fill Bottom of Infographic with "remember" card
@@ -1107,12 +1193,15 @@ async function fillInfographicPage(infographicModule, moduleData, subsectionNum)
         
         keyTakeawayContainer.style.display="flex";
         keyTakeawayContainer.innerHTML = "";
+        const infographicIconsModule=infographicIcons.find(module => module.module === infographicModule.module)
         for (let i=0; i<4; i++) {
             const moduleClone = template.content.cloneNode(true);
             moduleClone.querySelector('.takeaway-card h5').textContent=infographicModule.keyIdeaTitles[subsectionNum-1][i];
             moduleClone.querySelector('.takeaway-card p').textContent=infographicModule.keyIdeaBullets[subsectionNum-1][i];
+            moduleClone.querySelector('.takeaway-card .icon-circle').innerHTML = `<i data-lucide="${infographicIconsModule.icons[subsectionNum-1][i]}"></i>`;
             keyTakeawayContainer.appendChild(moduleClone);
         }
+        lucide.createIcons();
 
 
     }
@@ -1309,11 +1398,12 @@ async function fillQuizPage(moduleSelected, moduleData, questions, questionNumLo
     //                         ? JSON.parse(storedModuleQuizScores)
     //                         : defaultModuleQuizScores;
     const quizType= sessionStorage.getItem("quizType");
-    const quizSubmitted=isQuizSubmitted(moduleQuizScores, quizType, moduleSelected)
-    const start = (moduleSelected.id - 2) * 5;
-    if (quizSubmitted) {
-        moduleAnswersSubset = (quizAnswers.previousMiniQuiz || []).slice(start, start + 5);
-    }
+    const reviewQuiz = sessionStorage.getItem("reviewQuiz") === "true";
+    const quizSubmitted = quizType === "postQuiz" ? reviewQuiz : isQuizSubmitted(moduleQuizScores, quizType, moduleSelected);
+    // const start = (moduleSelected.id - 2) * 5;
+    // if (quizSubmitted) {
+    //     moduleAnswersSubset = (quizAnswers.previousMiniQuiz || []).slice(start, start + 5);
+    // }
 
     // Fill Quiz page header with header title and question number
     document.querySelector('.quiz-page .center-header-title h5').textContent = `Module ${moduleSelected.id}: ${moduleSelected.title}`;
@@ -1343,7 +1433,9 @@ async function fillQuizPage(moduleSelected, moduleData, questions, questionNumLo
     });
     if (quizSubmitted) {
         const result = await loadQuizReviewData(quizType);
-        fillQuestionReview(questionNumLocal, moduleAnswers, result, quizType)
+        if (result !== false) {
+            fillQuestionReview(questionNumLocal, moduleAnswers, result, quizType);
+        }
     }
 
 }
@@ -1433,10 +1525,11 @@ function fillQuestionReview(questionNumLocal, moduleAnswers, result, quizType) {
     
 
 }
-function quizSubmissionButtonSwitch(moduleAnswers, nextQuestionButton) {
+function quizSubmissionButtonSwitch(moduleAnswers, nextQuestionButton, moduleQuizScores) {
     const quizType = sessionStorage.getItem("quizType");
 
-    if (quizType === "miniQuiz" && sessionStorage.getItem("reviewQuiz") === "true") {
+    if (sessionStorage.getItem("reviewQuiz") === "true" ||
+        (quizType === "preQuiz" && moduleQuizScores.find(item => item.type === quizType)?.overallScore != null)) {
         document.querySelector('.quiz-page .submit-button').style.display = "none";
         return;
     }
@@ -1456,6 +1549,10 @@ function QuizButtons(moduleSelected, moduleData, quizQuestions, moduleAnswers, m
     const exitQuestionButton=document.querySelector('.quiz-page .top-quiz-template .white-button')
     const submitQuestionButton=document.querySelector('.quiz-page .question-footer .submit-button')
 
+    if (sessionStorage.getItem("reviewQuiz") !== "true") {
+        quizSubmissionButtonSwitch(moduleAnswers, nextQuestionButton, moduleQuizScores);
+    }
+
     const quizType = sessionStorage.getItem("quizType");
     const selectedModule = sessionStorage.getItem("selectedModule");
     if (restoreQuestion==="false") {
@@ -1466,18 +1563,18 @@ function QuizButtons(moduleSelected, moduleData, quizQuestions, moduleAnswers, m
         if (quizType=="miniQuiz") {
             const moduleID=`module${moduleSelected.id}`
             if (moduleQuizScores.find(item => item.type===quizType)[moduleID]==null)
-                quizSubmissionButtonSwitch (moduleAnswers, nextQuestionButton)
+                quizSubmissionButtonSwitch (moduleAnswers, nextQuestionButton, moduleQuizScores)
         }
         else if (quizType=="preQuiz" || quizType=="postQuiz") {
             if (moduleQuizScores.find(item => item.type===quizType).overallScore==null)
-                quizSubmissionButtonSwitch (moduleAnswers, nextQuestionButton)
+                quizSubmissionButtonSwitch (moduleAnswers, nextQuestionButton, moduleQuizScores)
         }  
     }
 
 
     answerButtons.forEach(button => {
         button.addEventListener("click", function (event) {
-            if (quizType === "miniQuiz" && sessionStorage.getItem("reviewQuiz") === "true") return;
+            if (sessionStorage.getItem("reviewQuiz") === "true") return;
             answerButtons.forEach(button => {
                 button.classList.remove("active-answer");
             });
@@ -1490,13 +1587,13 @@ function QuizButtons(moduleSelected, moduleData, quizQuestions, moduleAnswers, m
                 const startIndex = (moduleSelected.id - 2) * 5;
                 quizAnswers[quizType][startIndex+(questionNumLocal-1)]=selectedAnswer
                 moduleAnswers = quizAnswers[quizType].slice(startIndex,startIndex + 5);
-                quizSubmissionButtonSwitch (moduleAnswers, nextQuestionButton)
+                quizSubmissionButtonSwitch (moduleAnswers, nextQuestionButton, moduleQuizScores)
                 fillQuizPageProgress(moduleAnswers);
             }
             else {
                 const selectedAnswer = event.currentTarget.dataset.answer;
                 quizAnswers[quizType][questionNumLocal-1]=selectedAnswer
-                quizSubmissionButtonSwitch (moduleAnswers, nextQuestionButton)
+                quizSubmissionButtonSwitch (moduleAnswers, nextQuestionButton, moduleQuizScores)
                 fillQuizPageProgress(moduleAnswers);
             }
             
@@ -1521,12 +1618,12 @@ function QuizButtons(moduleSelected, moduleData, quizQuestions, moduleAnswers, m
                 nextQuestionButton.classList.add("inactive-button");
                 if (quizType=="miniQuiz") {
                     if (sessionStorage.getItem("reviewQuiz") !== "true") {
-                        quizSubmissionButtonSwitch(moduleAnswers, nextQuestionButton);
+                        quizSubmissionButtonSwitch(moduleAnswers, nextQuestionButton, moduleQuizScores);
                     }
                 }
                 else if (quizType=="preQuiz" || quizType=="postQuiz") {
                     if (moduleQuizScores.find(item => item.type===quizType).overallScore==null)
-                        quizSubmissionButtonSwitch (moduleAnswers, nextQuestionButton)
+                        quizSubmissionButtonSwitch (moduleAnswers, nextQuestionButton, moduleQuizScores)
                 }
                 
                 
@@ -1555,42 +1652,43 @@ function QuizButtons(moduleSelected, moduleData, quizQuestions, moduleAnswers, m
     });
 
     exitQuestionButton.addEventListener("click", async function() {
-        if (quizType==="miniQuiz") {
-            if (sessionStorage.getItem("reviewQuiz") !== "true") {
-                await updateQuizAnswers(quizType);
-            }
+        const reviewing = sessionStorage.getItem("reviewQuiz") === "true";
+
+        if (quizType === "postQuiz" && reviewing) {
+            const response = await fetch("http://127.0.0.1:8000/close-post-quiz-review", {
+                method: "POST",
+                credentials: "include",
+                headers: { "X-CSRF-Token": csrfToken }
+            });
+
+            if (!response.ok) throw new Error("Failed to close review");
+            sessionStorage.removeItem("reviewQuiz");
+        }
+
+        if (quizType === "miniQuiz") {
+            if (!reviewing) await updateQuizAnswers(quizType);
             sessionStorage.removeItem("reviewQuiz");
             window.location.href = "../infographic-module-template/infographic.html";
             return;
         }
-        else if (quizType==="postQuiz" || quizType==="preQuiz"){
-            await changeProgress (moduleData, selectedModule);
+
+        if (quizType === "preQuiz" || quizType === "postQuiz") {
+            if (!reviewing) await updateQuizAnswers(quizType);
+            await changeProgress(moduleData, selectedModule);
+            sessionStorage.removeItem("reviewQuiz");
             window.location.href = "../my-modules-page/my-modules.html";
         }
-        // sessionStorage.setItem("quizAnswers", JSON.stringify(quizAnswers));
-        await updateQuizAnswers(quizType)
     });
 
     submitQuestionButton.addEventListener("click", async function() {
-        
-        console.log("START:", structuredClone(moduleData));
-        let moduleID;
-        if (quizType==="miniQuiz") {
-            // sessionStorage.setItem("quizAnswers", JSON.stringify(quizAnswers));
-            moduleID=moduleSelected.id;
-
-        }
-        else if (quizType==="postQuiz" || quizType==="preQuiz") {
-            // sessionStorage.setItem("quizAnswers", JSON.stringify(quizAnswers));
-            moduleID=null;
-
-        }
+        const moduleID=moduleSelected.id;
         await updateQuizAnswers(quizType)
         
         const response = await fetch("http://127.0.0.1:8000/submit-quiz", {
             method: "POST",
             headers: {
-                "Content-Type": "application/json" 
+                "Content-Type": "application/json",
+                "X-CSRF-Token": csrfToken
             },
             credentials: "include",
             body: JSON.stringify({
@@ -1616,6 +1714,7 @@ function QuizButtons(moduleSelected, moduleData, quizQuestions, moduleAnswers, m
 
         }
         questionNumLocal = 1;
+        submitQuestionButton.style.display = "none";
         if (quizType === "miniQuiz") {
             const startIndex = (moduleSelected.id - 2) * 5;
 
@@ -1624,7 +1723,6 @@ function QuizButtons(moduleSelected, moduleData, quizQuestions, moduleAnswers, m
             quizAnswers.miniQuiz.splice(startIndex, 5, ...Array(5).fill(null));
 
             sessionStorage.setItem("reviewQuiz", "true");
-            submitQuestionButton.style.display = "none";
             nextQuestionButton.style.display = "flex";
             nextQuestionButton.classList.remove("inactive-button");
             backQuestionButton.classList.add("inactive-button");
@@ -1632,7 +1730,7 @@ function QuizButtons(moduleSelected, moduleData, quizQuestions, moduleAnswers, m
         }
 
         else if (quizType==="preQuiz" || quizType==="postQuiz") {
-            
+            sessionStorage.setItem("reviewQuiz", "true");
             await fillQuizPage(moduleSelected, moduleData, quizQuestions, questionNumLocal, moduleAnswers)
             
         }
@@ -1658,7 +1756,7 @@ function QuizButtons(moduleSelected, moduleData, quizQuestions, moduleAnswers, m
 
 function fillQuizPageProgress(moduleAnswers) {
     let quizType = sessionStorage.getItem("quizType");
-    let percentComplete=Math.round((moduleAnswers.filter(item => item!=null).length)/moduleAnswers.length*100) 
+    let percentComplete = sessionStorage.getItem("reviewQuiz") === "true" ? 100 : Math.round((moduleAnswers.filter(item => item != null).length) / moduleAnswers.length * 100);
     // Fill question div progress bar with proper percentage and width
     const questionDiv = document.querySelector('.quiz-page .main-content');
     questionDiv.querySelector('.progress-bar-purple').style.width=`${percentComplete}%`;
@@ -1702,6 +1800,8 @@ let lastName;
 let admin_users_data_li = [];
 let subsectionNumberLocal = 1;
 let questionNumLocal = 1;
+let trainingTimer = null;
+let csrfToken = null;
 
 async function checkLogin() {
     const response = await fetch("http://127.0.0.1:8000/check-session", {
@@ -1716,7 +1816,15 @@ async function checkLogin() {
     return true;
 }
 
-let login = await checkLogin();
+
+async function loadCsrfToken() {
+    const response = await fetch(`http://127.0.0.1:8000/csrf-token`, {
+        credentials: "include"
+    });
+    if (!response.ok) throw new Error("Failed to retrieve CSRF token.");
+    csrfToken = (await response.json()).csrf_token;
+}
+
 
 async function loadModuleData() {
     const response = await fetch("http://127.0.0.1:8000/get-module-data", {
@@ -1758,12 +1866,26 @@ async function loadModuleQuizAnswers() {
     quizAnswers = await response.json();
 }
 
+async function getAdminStatus() {
+    const response = await fetch("http://127.0.0.1:8000/get-admin-status", {
+        method: "GET",
+        credentials: "include"
+    });
+    if (!response.ok) {
+        console.error("Failed to get admin status:", response.status);
+        return null;
+    }
+    return await response.json();
+}
 
+let login = await checkLogin();
 if (login) { 
+    await loadCsrfToken();
     await loadModuleData()
     await loadModuleQuizScores()
     await loadModuleQuizAnswers()
 }
+
 
 
 
@@ -1784,7 +1906,14 @@ if (document.querySelector("#reset-password-form")) {
     resetPasswordButtons();
 }
 if (document.querySelector('.dashboard-page')) {
-    fillSidebarContainer('[data-page="dashboard"]');
+    await fillSidebarContainer('[data-page="dashboard"]');
+
+    const adminLink = document.querySelector("#admin-link");
+    const admin_status = await getAdminStatus();
+    if (adminLink && admin_status) {
+        adminLink.style.display = "flex";
+    }
+
     documentNameFill(firstName, lastName);
     dashboardModulesRowsDiv(moduleData);
     dashboardOverallProgressDiv(moduleData);
@@ -1793,23 +1922,70 @@ if (document.querySelector('.dashboard-page')) {
     
 }
 if (document.querySelector('.admin-dashboard-page')) {
-    fillSidebarContainer('[data-page="admin-dashboard"]');
+    await fillSidebarContainer('[data-page="admin-dashboard"]');
+
+    const adminLink = document.querySelector("#admin-link");
+    const admin_status = await getAdminStatus();
+    if (adminLink && admin_status) {
+        adminLink.style.display = "flex";
+    }
+
     documentNameFill(firstName, lastName);
     fillAdminDashboard()
 }
 
 
 if (document.querySelector('.my-modules-page')) {
-    fillSidebarContainer('[data-page="my-modules"]')
+    await fillSidebarContainer('[data-page="my-modules"]')
+
+    const adminLink = document.querySelector("#admin-link");
+    const admin_status = await getAdminStatus();
+    if (adminLink && admin_status) {
+        adminLink.style.display = "flex";
+    }
+
     documentNameFill(firstName, lastName);
     
     myModulesRowsDiv(moduleData, moduleQuizScores);
     myModuleSummaryInformationDiv(moduleData)
 }
 
+if (document.querySelector('.infographic-page') || document.querySelector('.quiz-page')) {
+    trainingTimer = startTrainingTimer();
+
+    let lastSavedSeconds = 0;
+
+    setInterval(() => {
+        const currentSeconds = trainingTimer.getSeconds();
+        const newSeconds = currentSeconds - lastSavedSeconds;
+
+        if (newSeconds > 0) {
+            saveTrainingTime(newSeconds);
+            lastSavedSeconds = currentSeconds;
+        }
+    }, 30000);
+
+    window.addEventListener("pagehide", () => {
+        const currentSeconds = trainingTimer.getSeconds();
+        const newSeconds = currentSeconds - lastSavedSeconds;
+
+        if (newSeconds > 0) {
+            saveTrainingTime(newSeconds, true);
+        }
+        trainingTimer.stop();
+    });
+}
 
 if (document.querySelector('.infographic-page')) {
-    fillSidebarContainer('[data-page="my-modules"]')
+    
+    await fillSidebarContainer('[data-page="my-modules"]')
+
+    const adminLink = document.querySelector("#admin-link");
+    const admin_status = await getAdminStatus();
+    if (adminLink && admin_status) {
+        adminLink.style.display = "flex";
+    }
+
     documentNameFill(firstName, lastName);
 
     const selectedModule = sessionStorage.getItem("selectedModule");
@@ -1868,11 +2044,10 @@ if (document.querySelector('.quiz-page')) {
                 questionNumLocal = moduleAnswers.length;
             }
         }
-        const preQuizScores = moduleQuizScores.find(item => item.type === "preQuiz");
-        const score = preQuizScores.overallScore;
-        if (score !== null) {
+        if (isQuizSubmitted(moduleQuizScores, quizType, moduleSelected)) {
             questionNumLocal = 1;
         }
+
 
         fillQuizPage(moduleSelected, moduleData, quizQuestions, questionNumLocal, moduleAnswers)
         QuizButtons(moduleSelected, moduleData, quizQuestions, moduleAnswers, moduleQuizScores);
@@ -1892,9 +2067,7 @@ if (document.querySelector('.quiz-page')) {
                 questionNumLocal = moduleAnswers.length;
             }
         }
-        const postQuizScores = moduleQuizScores.find(item => item.type === "postQuiz");
-        const score = postQuizScores.overallScore;
-        if (score !== null) {
+        if (sessionStorage.getItem("reviewQuiz") === "true") {
             questionNumLocal = 1;
         }
         fillQuizPage(moduleSelected, moduleData, quizQuestions, questionNumLocal, moduleAnswers)

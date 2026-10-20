@@ -1534,3 +1534,85 @@ export const infographic= [
 ];
 
 
+export const infographicIcons = [
+    {
+        module: "volunteer-roles-boundaries",
+        icons: [
+            ["clipboard-check", "handshake", "shield-alert", "circle-help"],
+            ["stethoscope", "ban", "message-circle-warning", "users"],
+            ["lock-keyhole", "file-lock", "eye-off", "message-circle-question"],
+            ["door-closed", "lock", "clipboard-list", "octagon-alert"],
+            ["badge-check", "shield-check", "door-closed", "circle-help"]
+        ]
+    },
+    {
+        module: "hospital-navigation",
+        icons: [
+            ["hospital", "bed-double", "baby", "building-2"],
+            ["route", "map-pin", "coffee", "map-pinned"],
+            ["list-ordered", "signpost", "map-pin-check", "circle-help"],
+            ["footprints", "accessibility", "shield-alert", "handshake"],
+            ["building-2", "route", "circle-help", "accessibility"]
+        ]
+    },
+    {
+        module: "patient-guest-interaction",
+        icons: [
+            ["handshake", "ear", "message-circle", "brain"],
+            ["message-square", "message-circle-question", "heart-handshake", "clock-alert"],
+            ["signpost", "clipboard-list", "shield-check", "users"],
+            ["list-todo", "file-text", "clipboard-check", "file-lock"],
+            ["messages-square", "circle-help", "clock-alert", "clipboard-check"]
+        ]
+    },
+    {
+        module: "emergency-awareness",
+        icons: [
+            ["heart-pulse", "eye", "map-pin", "triangle-alert"],
+            ["heart-pulse", "shield-alert", "circle-help", "phone-call"],
+            ["map-pin", "eye", "message-square", "ear"],
+            ["move", "clipboard-check", "users", "stethoscope"],
+            ["eye", "siren", "message-square", "users"]
+        ]
+    },
+    {
+        module: "rapid-response-cpr-aed",
+        icons: [
+            ["siren", "hand-heart", "eye", "list-ordered"],
+            ["phone-call", "map-pin", "message-square", "ear"],
+            ["heart-pulse", "siren", "graduation-cap", "handshake"],
+            ["zap", "map-pinned", "phone-call", "clipboard-check"],
+            ["siren", "map-pin", "badge-check", "handshake"]
+        ]
+    },
+    {
+        module: "seizure-stroke-poison",
+        icons: [
+            ["activity", "phone-call", "shield-check", "hand"],
+            ["brain", "siren", "eye", "users"],
+            ["triangle-alert", "ban", "message-square", "shield-alert"],
+            ["eye", "phone-call", "shield-check", "users"],
+            ["siren", "message-square", "ban", "shield-check"]
+        ]
+    },
+    {
+        module: "fire-safety-codes",
+        icons: [
+            ["door-open", "flame", "phone-call", "clipboard-check"],
+            ["hand-heart", "alarm-smoke", "door-closed", "log-out"],
+            ["pin", "crosshair", "hand", "move-horizontal"],
+            ["radio", "ear", "badge-check", "users"],
+            ["map", "list-ordered", "fire-extinguisher", "clipboard-check"]
+        ]
+    },
+    {
+        module: "scenario-decision-making",
+        icons: [
+            ["ear", "message-circle", "badge-check", "users"],
+            ["door-closed", "stethoscope", "lock-keyhole", "shield-alert"],
+            ["eye", "siren", "message-square", "move"],
+            ["file-text", "clipboard-check", "users", "scale"],
+            ["scan-eye", "badge-check", "shield-check", "message-square"]
+        ]
+    }
+];

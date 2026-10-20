@@ -22,6 +22,13 @@ body {
     overflow-y: hidden;
 }
 
+button {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+}
+
 h1, h2, h3, h4, h5, h6 {
     font-family: "Tahoma";
     font-weight: 550;  
@@ -174,7 +181,7 @@ p {
 }
 
 .all-login-icon-text-div {
-    margin-top: 40px;
+    margin-top: 20px;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
@@ -200,28 +207,6 @@ p {
     
 
 }
-.login-bookcheck-icon {
-    height: 75px;
-    width: auto;
-    box-sizing: border-box;
-    filter: invert(19%) sepia(96%) saturate(5200%) hue-rotate(245deg) brightness(65%) contrast(115%);
-    opacity: 75%;
-}  
-.login-handshake-icon {
-    height: 50px;
-    width: auto;
-    box-sizing: border-box;
-    filter: invert(19%) sepia(96%) saturate(5200%) hue-rotate(245deg) brightness(65%) contrast(115%);
-    opacity: 75%;
-}  
-.login-impact-icon {
-    height: 70px;
-    width: auto;
-    box-sizing: border-box;
-    filter: invert(19%) sepia(96%) saturate(5200%) hue-rotate(245deg) brightness(65%) contrast(115%);
-    opacity: 75%;
-    transform: translateX(1.5px);     
-}  
 
 .login-step-text h4,.login-step-text p {
     margin: 2.5px;
@@ -359,19 +344,8 @@ p {
     filter: invert(19%) sepia(96%) saturate(5200%) hue-rotate(265deg) brightness(65%) contrast(115%);
     
 }
-.input-lock-icon {
-    height: 25px;
-    width: auto;
-    box-sizing: border-box;
-    filter: invert(19%) sepia(96%) saturate(5200%) hue-rotate(265deg) brightness(65%) contrast(115%);
-}
-
-.input-eye-icon {
-    height: 25px;
-    width: auto;
-    right: 10px;
-    box-sizing: border-box;
-    filter: invert(19%) sepia(96%) saturate(5200%) hue-rotate(265deg) brightness(65%) contrast(115%);
+.lock-icon {
+    transform: translateX(-3px);
 }
 .password-input-div label {
     font-size: 16px;
@@ -402,8 +376,13 @@ p {
     border: none;
     outline: none;
 
+}
 
-    
+.password-hide-button {
+    display: None;
+}
+.password-show-button {
+    display: flex;
 }
 .input-div {
     display: flex;

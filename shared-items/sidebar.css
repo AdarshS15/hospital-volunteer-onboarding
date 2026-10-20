@@ -133,3 +133,7 @@
 .sidebar-links .active:hover {
     pointer-events: none;
 }
+ 
+#admin-link {
+    display: none;
+}

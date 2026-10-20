@@ -10,6 +10,7 @@ class User(Base):
     first_name = Column(String, nullable=False)
     last_name = Column(String, nullable=False)
     last_activity = Column(DateTime(timezone=True), nullable=True)
+    training_seconds = Column(Integer, nullable=False, default=0)
     
 class PasswordResetToken(Base):
     __tablename__ = "password_reset_tokens"
@@ -53,9 +54,18 @@ class UserQuizAnswers(Base):
     module_type = Column(String, nullable=False)
     module_answer_list=Column(JSON, nullable=False)
     previous_answer_list = Column(JSON, nullable=True)
+    post_quiz_review_allowed = Column(Boolean, default=False, nullable=False)
     __table_args__ = (
     UniqueConstraint("user_id", "module_type"),
 )
+
+class UserSession(Base):
+    __tablename__ = "user_sessions"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    session_id = Column(String(255), unique=True, nullable=False)
+    expires_at=Column(DateTime(timezone=True), nullable=False)
+    csrf_token = Column(String(64), nullable=False)
     
 
 

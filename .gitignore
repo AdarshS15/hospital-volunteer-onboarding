@@ -29,3 +29,5 @@ secrets.json
 
 # Local development utilities
 BackendPython/reset_database.py
+
+Resources/HospitalDirectory.pdf

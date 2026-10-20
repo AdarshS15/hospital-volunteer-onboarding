@@ -1,11 +1,15 @@
 import math
 import hashlib
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from fastapi import Request, Header
 from datetime import datetime, timezone, timedelta
 from quiz_data import correct_quiz_answers
 from quiz_data import quiz_explanations
 from fastapi import FastAPI, Depends, HTTPException, Response, Cookie
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 from passlib.context import CryptContext
 from typing import Literal, Annotated
 module_name = Literal["module2", "module3", "module4", "module5", "module6", "module7", "module8", "module9"]
@@ -15,24 +19,29 @@ import secrets
 from database_creation import engine, SessionLocal
 models.Base.metadata.create_all(bind=engine)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-sessions = {}
-ADMIN_EMAILS=["test.maker@gmail.com","adarsh.shankarling1@gmail.com", "steph.webb@commonspirit.org" ]
+ADMIN_EMAILS=["test.maker1@gmail.com","adarsh.shankarling1@gmail.com", "steph.webb@commonspirit.org" ]
 
-def get_current_user_id(session_id: str = Cookie(None)):
-    if session_id is None:
-        raise HTTPException(
-            status_code=401,
-            detail="Not authenticated."
-        )
-    if session_id not in sessions:
-        raise HTTPException(
-            status_code=401,
-            detail="Not authenticated."
-        )
-    return sessions[session_id]
+app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://127.0.0.1:5500"],
+    allow_credentials=True,
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type", "X-CSRF-Token"]
+)
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-def hash_password(password: str):
-    return pwd_context.hash(password)
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Content-Security-Policy"] = "frame-ancestors 'none'"
+    return response
+
 
 def get_db():
     db = SessionLocal()
@@ -41,32 +50,70 @@ def get_db():
     finally:
         db.close()
 
+
+def get_current_user_id(session_id: str = Cookie(None), db=Depends(get_db)):
+    if session_id is None:
+        raise HTTPException(status_code=401, detail="Not authenticated.")
+    
+    session = db.query(models.UserSession).filter(models.UserSession.session_id == session_id).first()
+
+    if session is None:
+        raise HTTPException(status_code=401, detail="Not authenticated.")
+
+    expires_at = session.expires_at
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+
+    if datetime.now(timezone.utc) >= expires_at:
+        db.delete(session)
+        db.commit()
+        raise HTTPException(status_code=401, detail="Session expired.")
+
+    return session.user_id
+
+def verify_csrf(
+    request: Request,
+    user_id: int = Depends(get_current_user_id),
+    csrf_token: str | None = Header(default=None, alias="X-CSRF-Token"),
+    db=Depends(get_db)
+):
+    session_id = request.cookies.get("session_id")
+    session = db.query(models.UserSession).filter(
+        models.UserSession.session_id == session_id,
+        models.UserSession.user_id == user_id
+    ).first()
+
+    if session is None or csrf_token is None or not secrets.compare_digest(csrf_token, session.csrf_token):
+        raise HTTPException(status_code=403, detail="Invalid CSRF token.")
+
+    return user_id
+
+def hash_password(password: str):
+    return pwd_context.hash(password)
+
+
 def update_last_activity(user_id, db):
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if user is not None:
         user.last_activity = datetime.now(timezone.utc)
         db.commit()
 
-class UserCreate(BaseModel):
-    email: str
-    password: str
-    first_name: str
-    last_name: str  
 
 
-class UserLogin(BaseModel):
-    email: str
-    password: str
+@app.get("/csrf-token")
+def get_csrf_token(user_id: int = Depends(get_current_user_id), session_id: str = Cookie(None), db=Depends(get_db)):
+    session = db.query(models.UserSession).filter(
+        models.UserSession.session_id == session_id,
+        models.UserSession.user_id == user_id
+    ).first()
+
+    if session is None:
+        raise HTTPException(status_code=401, detail="Not authenticated.")
+
+    return {"csrf_token": session.csrf_token}
 
 
-app = FastAPI()
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://127.0.0.1:5500"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+
 
 
 @app.get("/me")
@@ -76,25 +123,56 @@ def get_me(user_id: int = Depends(get_current_user_id)):
     }
 
 
-
 @app.post("/logout")
 def logout(response: Response, session_id: str = Cookie(None), db=Depends(get_db)):
-    if session_id in sessions:
-        user_id = sessions[session_id]
-        update_last_activity(user_id, db)
-        del sessions[session_id]
+    if session_id is not None:
+        session = db.query(models.UserSession).filter(models.UserSession.session_id == session_id).first()
+
+        if session is not None:
+            update_last_activity(session.user_id, db)
+            db.delete(session)
+            db.commit()
 
     response.delete_cookie(key="session_id")
     return {"message": "Logout successful"}
 
+
+
+
+
+class UserCreate(BaseModel):
+    email: EmailStr
+    password: str = Field(min_length=12)
+    first_name: str = Field(min_length=1, max_length=100)
+    last_name: str = Field(min_length=1, max_length=100)
+    
+    @field_validator("first_name", "last_name")
+    @classmethod
+    def validate_name(cls, value: str):
+        value = value.strip()
+        if not value:
+            raise ValueError("Name cannot be empty or contain only spaces.")
+        return value
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, value: str):
+        if len(value.encode("utf-8")) > 72:
+            raise ValueError("Password must not exceed 72 bytes.")
+        return value
+    
 @app.post("/register")
-def register(user: UserCreate, db = Depends(get_db)):
+@limiter.limit("3/minute")
+def register(request: Request, user: UserCreate, db = Depends(get_db)):
     existing_user = db.query(models.User).filter(models.User.email == user.email).first()
     if existing_user:
         raise HTTPException(
             status_code=400,
             detail="An account with this email already exists."
         )
+    if len(user.password.encode("utf-8")) > 72:
+        raise HTTPException(status_code=422, detail="Password must not exceed 72 bytes.")
+
     hashed_password = hash_password(user.password)
     new_user = models.User(
         email=user.email,
@@ -143,8 +221,22 @@ def register(user: UserCreate, db = Depends(get_db)):
         }
 
 
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str = Field(min_length=1)
+    
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, value: str):
+        if len(value.encode("utf-8")) > 72:
+            raise ValueError("Password must not exceed 72 bytes.")
+        return value
+
+
 @app.post("/login")
-def login(user: UserLogin, response: Response, db=Depends(get_db)):
+@limiter.limit("5/minute")
+def login(request: Request, user: UserLogin, response: Response, db=Depends(get_db)):
     db_user = db.query(models.User).filter(models.User.email == user.email).first()
     if db_user is None:
         raise HTTPException(
@@ -157,8 +249,19 @@ def login(user: UserLogin, response: Response, db=Depends(get_db)):
             status_code=401,
             detail="Invalid email or password."
         )
+
     session_id = secrets.token_urlsafe(32)
-    sessions[session_id] = db_user.id
+    csrf_token = secrets.token_hex(32)
+
+    new_session = models.UserSession(
+        user_id=db_user.id,
+        session_id=session_id,
+        csrf_token=csrf_token,
+        expires_at=datetime.now(timezone.utc) + timedelta(hours=8)
+    )
+    db.add(new_session)
+    db.commit()
+
     response.set_cookie(
         key="session_id",
         value=session_id,
@@ -170,15 +273,17 @@ def login(user: UserLogin, response: Response, db=Depends(get_db)):
     update_last_activity(db_user.id, db)
     return {
         "message": "Login successful",
-        "user_id": db_user.id
+        "user_id": db_user.id,
+        "is_admin": db_user.email.lower() in ADMIN_EMAILS
     }
+
 
 class ForgotPasswordRequest(BaseModel):
     email: EmailStr
 
-
 @app.post("/forgot-password")
-def forgot_password(data: ForgotPasswordRequest, db=Depends(get_db)):
+@limiter.limit("3/minute")
+def forgot_password(request: Request, data: ForgotPasswordRequest, db=Depends(get_db)):
     message = "If an account exists with this email, a password reset link will be sent."
 
     user = db.query(models.User).filter(models.User.email == data.email).first()
@@ -203,13 +308,14 @@ def forgot_password(data: ForgotPasswordRequest, db=Depends(get_db)):
     return {"message": message}
 
 
-class ResetPasswordRequest(BaseModel):
-    token: str
-    new_password: str = Field(min_length=8)
 
+class ResetPasswordRequest(BaseModel):
+    token: str = Field(min_length=1, max_length=45)
+    new_password: str = Field(min_length=12)
 
 @app.post("/reset-password")
-def reset_password(data: ResetPasswordRequest, db=Depends(get_db)):
+@limiter.limit("5/minute")
+def reset_password(request: Request, data: ResetPasswordRequest, db=Depends(get_db)):
     token_hash = hashlib.sha256(data.token.encode()).hexdigest()
 
     reset_record = db.query(models.PasswordResetToken).filter(
@@ -231,7 +337,10 @@ def reset_password(data: ResetPasswordRequest, db=Depends(get_db)):
     if user is None:
         raise HTTPException(status_code=400, detail="Invalid or expired reset link.")
 
+    if len(data.new_password.encode("utf-8")) > 72:
+        raise HTTPException(status_code=422, detail="Password must not exceed 72 bytes.")
     user.password_hash = hash_password(data.new_password)
+
     reset_record.used_at = datetime.now(timezone.utc)
 
     # Invalidate all other outstanding reset links for this user.
@@ -241,12 +350,9 @@ def reset_password(data: ResetPasswordRequest, db=Depends(get_db)):
         models.PasswordResetToken.used_at.is_(None)
     ).update({"used_at": datetime.now(timezone.utc)}, synchronize_session=False)
 
-    db.commit()
-
     # Invalidate existing sessions for this account.
-    for session_id, session_user_id in list(sessions.items()):
-        if session_user_id == user.id:
-            del sessions[session_id]
+    db.query(models.UserSession).filter(models.UserSession.user_id == user.id).delete(synchronize_session=False)
+    db.commit()
 
     return {"message": "Password reset successfully. You can now log in."}
 
@@ -269,94 +375,168 @@ def get_my_account(user_id: int = Depends(get_current_user_id), db=Depends(get_d
         "last_name": db_user.last_name
     }
 
+from collections import defaultdict
+
+def get_admin_user_data(db):
+    users = db.query(models.User).all()
+    modules = db.query(models.ModuleData).all()
+    quiz_scores = db.query(models.QuizScores).all()
+
+    modules_by_user = defaultdict(list)
+    scores_by_user = defaultdict(lambda: defaultdict(list))
+
+    for module in modules:
+        modules_by_user[module.user_id].append(module)
+
+    for score in quiz_scores:
+        scores_by_user[score.user_id][score.module_type].append(score)
+
+    admin_users_data = []
+
+    for user in users:
+        user_modules = modules_by_user[user.id]
+        pre_scores = scores_by_user[user.id]["preQuiz"]
+        post_scores = scores_by_user[user.id]["postQuiz"]
+
+        pre_completed = len(pre_scores) == 8 and all(score.score is not None for score in pre_scores)
+        post_completed = len(post_scores) == 8 and all(score.score is not None for score in post_scores)
+
+        pre_total = sum(score.score for score in pre_scores) if pre_completed else None
+        post_total = sum(score.score for score in post_scores) if post_completed else None
+
+        pre_percentage = (pre_total / 40) * 100 if pre_completed else None
+        post_percentage = (post_total / 40) * 100 if post_completed else None
+
+        pre_status = next((module.status for module in user_modules if module.module_id == 1), "Not Started")
+        post_status = next((module.status for module in user_modules if module.module_id == 10), "Not Started")
+
+        if post_status == "Completed":
+            status = "Completed"
+        elif pre_status == "Not Started":
+            status = "Not Started"
+        else:
+            status = "In Progress"
+
+        passed = post_completed and post_total >= 37 and all(score.score >= 4 for score in post_scores)
+
+        admin_users_data.append({
+            "id": user.id,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "email": user.email,
+            "modules_completed": f"{sum(module.status == 'Completed' for module in user_modules)} / {len(user_modules)}",
+            "pre_quiz_score": math.floor(pre_percentage) if pre_completed else None,
+            "post_quiz_score": math.floor(post_percentage) if post_completed else None,
+            "improvement": math.floor(post_percentage - pre_percentage) if pre_completed and post_completed else None,
+            "passed": passed,
+            "status": status,
+            "last_activity": user.last_activity,
+            "training_seconds": user.training_seconds or 0,
+            "required_completion": (
+                sum(module.progress == 100 for module in user_modules if module.required)
+                / sum(module.required for module in user_modules) * 100
+                if any(module.required for module in user_modules) else None
+            ),
+            "exact_improvement": post_percentage - pre_percentage if pre_completed and post_completed else None
+        })
+
+    return admin_users_data
+
+@app.get("/get-admin-status")
+def get_admin_status(user_id: int = Depends(get_current_user_id), db=Depends(get_db)):
+    user_email = db.query(models.User).filter(models.User.id == user_id).first().email
+
+    return user_email.lower() in ADMIN_EMAILS
+
+
 @app.get("/get-admin-data")
 def get_admin_data(user_id: int = Depends(get_current_user_id), db=Depends(get_db)):
-
     current_user = db.query(models.User).filter(models.User.id == user_id).first()
+
     if current_user is None or current_user.email.lower() not in ADMIN_EMAILS:
         raise HTTPException(status_code=403, detail="Admin access required.")
-        
-    admin_users_data_li=[]
-    users = db.query(models.User).all()
-    # Getting each individual row of the users SQL database that holds the user data
-    for user in users:
-        # creating a user info template that will be appended
-        user_template_info={
-                "first_name": "",
-                "last_name": "",
-                "email": "",
-                "modules_completed": "",
-                "pre_quiz_score": None,
-                "post_quiz_score": None,
-                "improvement": None,
-                "passed": False,
-                "status": "",
-                "last_activity": ""
-            }
-        # find and add name and email for the user
-        user_template_info["first_name"]=user.first_name
-        user_template_info["last_name"]=user.last_name
-        user_template_info["email"]=user.email
 
-        # find and add the number of modules completed for the user
-        user_modules=db.query(models.ModuleData).filter(models.ModuleData.user_id == user.id).all()
-        completed_modules=0
-        for user_module in user_modules:
-            if user_module.status=="Completed":
-                completed_modules+=1
-        user_template_info["modules_completed"]=f"{completed_modules} / {len(user_modules)}"
+    admin_users_data = get_admin_user_data(db)
 
-        # find and add the status of the user
-        pre_quiz_status = next(module.status for module in user_modules if module.module_id == 1)
-        post_quiz_status = next(module.status for module in user_modules if module.module_id == 10)
-        if post_quiz_status=="Completed":
-            user_template_info["status"]="Completed"
-        elif pre_quiz_status=="Not Started":
-            user_template_info["status"]="Not Started"
-        else:
-            user_template_info["status"]="In Progress"
+    for user_data in admin_users_data:
+        del user_data["id"]
+        del user_data["training_seconds"]
+        del user_data["required_completion"]
+        del user_data["exact_improvement"]
 
-        # find and add the pre quiz scores for the user
-        pre_quiz_scores=db.query(models.QuizScores).filter(models.QuizScores.user_id == user.id, models.QuizScores.module_type== "preQuiz").all()
-        overall_pre_quiz_score=0
-        pre_quiz_completed = len(pre_quiz_scores) == 8
-        for pre_quiz_score_row in pre_quiz_scores:
-            if pre_quiz_score_row.score==None:
-                pre_quiz_completed = False
-                break
-            overall_pre_quiz_score+=pre_quiz_score_row.score
-        if pre_quiz_completed:
-            user_template_info["pre_quiz_score"]= math.floor((overall_pre_quiz_score/40)*100)
-        
-        # find and add the post quiz scores for the user
-        post_quiz_scores=db.query(models.QuizScores).filter(models.QuizScores.user_id == user.id, models.QuizScores.module_type== "postQuiz").all()
-        overall_post_quiz_score=0
-        post_quiz_completed = len(post_quiz_scores) == 8
-        for post_quiz_score_row in post_quiz_scores:
-            if post_quiz_score_row.score==None:
-                post_quiz_completed = False
-                break
-            overall_post_quiz_score+=post_quiz_score_row.score
-        if post_quiz_completed:
-            user_template_info["post_quiz_score"]= math.floor((overall_post_quiz_score/40)*100)
+    return admin_users_data
 
-        # calculate and add the improvement between pre and post quiz score
-        if pre_quiz_completed and post_quiz_completed:
-            user_template_info["improvement"]= math.floor(((overall_post_quiz_score/40)*100)-((overall_pre_quiz_score/40)*100))
+@app.get("/get-admin-metrics")
+def get_admin_metrics(user_id: int = Depends(get_current_user_id), db=Depends(get_db)):
+    current_user = db.query(models.User).filter(models.User.id == user_id).first()
+
+    if current_user is None or current_user.email.lower() not in ADMIN_EMAILS:
+        raise HTTPException(status_code=403, detail="Admin access required.")
+
+    users = get_admin_user_data(db)
+    total_users = len(users)
+
+    # Average required module completion
+    completion_percentages = [
+        user["required_completion"]
+        for user in users
+        if user["required_completion"] is not None
+    ]
+
+    average_completion = (
+        round(sum(completion_percentages) / len(completion_percentages))
+        if completion_percentages else 0
+    )
+
+    # Number and percentage of users who passed the post-quiz
+    passed_post_quiz = sum(user["passed"] for user in users)
+    passed_percentage = round((passed_post_quiz / total_users) * 100) if total_users else 0
+    passed_post_quiz_display = f"{passed_post_quiz} ({passed_percentage}%)"
+
+    # Total training time
+    total_training_seconds = sum(user["training_seconds"] for user in users)
+    hours, remaining_seconds = divmod(total_training_seconds, 3600)
+    minutes = remaining_seconds // 60
+    total_training_time = f"{hours}h {minutes}m"
+
+    # Average pre-quiz to post-quiz improvement
+    improvements = [
+        user["exact_improvement"]
+        for user in users
+        if user["exact_improvement"] is not None
+    ]
+
+    average_improvement = (
+        round(sum(improvements) / len(improvements), 1)
+        if improvements else 0
+    )
+
+    return {
+        "total_users": total_users,
+        "average_required_completion": average_completion,
+        "passed_post_quiz": passed_post_quiz_display,
+        "total_training_time": total_training_time,
+        "average_improvement": average_improvement
+    }
+
     
-        # calculate and add if the user passed:
-        if post_quiz_completed:
-            individual_module_scores_passed=True
-            for post_quiz_score_row in post_quiz_scores:
-                if post_quiz_score_row.score<4:
-                    individual_module_scores_passed=False
-            if overall_post_quiz_score>=37 and individual_module_scores_passed:
-                user_template_info["passed"]=True
+class TrainingTimeRequest(BaseModel):
+    seconds: int = Field(ge=1, le=60)
 
-        user_template_info["last_activity"]=user.last_activity
-        admin_users_data_li.append(user_template_info)
+@app.post("/save-training-time", status_code=204)
+@limiter.limit("5/minute")
+def save_training_time(request: Request, data: TrainingTimeRequest, user_id: int = Depends(verify_csrf), db=Depends(get_db)):
+    if data.seconds <= 0 or data.seconds > 60:
+        raise HTTPException(status_code=400, detail="Invalid training duration.")
 
-    return admin_users_data_li
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found.")
+
+    user.training_seconds += data.seconds
+    db.commit()
+
 
 @app.get("/get-module-data")
 def get_my_modules(user_id: int = Depends(get_current_user_id), db=Depends(get_db)):
@@ -449,8 +629,14 @@ def get_my_quiz_review(quiz_type: str, module_id: int|None=None, user_id: int = 
         start_index = (module_id - 2) * 5
         previous = saved_answers.previous_answer_list or []
         specific_quiz_answers = previous[start_index:start_index + 5]
+    elif quiz_type == "postQuiz":
+        if not saved_answers.post_quiz_review_allowed:
+            return False
+        specific_quiz_answers = saved_answers.previous_answer_list or []
     else:
         specific_quiz_answers = saved_answers.module_answer_list
+    if len(specific_quiz_answers) != (5 if quiz_type == "miniQuiz" else 40):
+        raise HTTPException(status_code=400, detail="Saved quiz review answers are incomplete.")
     return answer_check(quiz_type, specific_quiz_answers, module_id)
 
 class ModuleProgressUpdate(BaseModel):
@@ -459,7 +645,8 @@ class ModuleProgressUpdate(BaseModel):
 
 
 @app.post("/update-module-progress")
-def update_module_progress(module: ModuleProgressUpdate, user_id: int = Depends(get_current_user_id), db=Depends(get_db)):
+@limiter.limit("50/minute")
+def update_module_progress(request: Request,module: ModuleProgressUpdate, user_id: int = Depends(verify_csrf), db=Depends(get_db)):
     if module.module_id == 1:
         module_type = "preQuiz"
     elif 2 <= module.module_id <= 9:
@@ -536,8 +723,11 @@ class QuizAnswersUpdate(BaseModel):
     module_type: Literal["miniQuiz", "preQuiz", "postQuiz"]
     module_answer_list: list[Literal["A", "B", "C", "D"] | None] = Field(min_length=40, max_length=40)
 
+
+
 @app.post("/update-quiz-answers")
-def update_quiz_answers(data: QuizAnswersUpdate, user_id: int = Depends(get_current_user_id), db=Depends(get_db)):
+@limiter.limit("10/minute")
+def update_quiz_answers(request: Request, data: QuizAnswersUpdate, user_id: int = Depends(verify_csrf), db=Depends(get_db)):
     user_quiz_answers = db.query(models.UserQuizAnswers).filter(models.UserQuizAnswers.user_id == user_id, models.UserQuizAnswers.module_type ==data.module_type).first()
     if user_quiz_answers is None:
         raise HTTPException(
@@ -553,35 +743,29 @@ def update_quiz_answers(data: QuizAnswersUpdate, user_id: int = Depends(get_curr
 
 
 class QuizSubmission(BaseModel):
-    quizType: str
-    answers: list[str | None]
-    moduleID: int | None = None
+    quizType: Literal["miniQuiz", "preQuiz", "postQuiz"]
+    answers: list[Literal["A", "B", "C", "D"]]
+    moduleID: int | None = Field(default=None, ge=1)
+
+    @model_validator(mode="after")
+    def validate_submission(self):
+        if self.quizType == "miniQuiz":
+            if len(self.answers) != 5 or self.moduleID not in range(2, 10):
+                raise ValueError("Invalid mini-quiz submission.")
+        else:
+            expected_id = 1 if self.quizType == "preQuiz" else 10
+            if len(self.answers) != 40 or self.moduleID != expected_id:
+                raise ValueError("Invalid pre/post-quiz submission.")
+        return self
 
 @app.post("/submit-quiz")
-def quiz_submission_check(submission: QuizSubmission, user_id: int = Depends(get_current_user_id), db=Depends(get_db)): 
+@limiter.limit("5/minute")
+def quiz_submission_check(request: Request, submission: QuizSubmission, user_id: int = Depends(verify_csrf), db=Depends(get_db)): 
+    
     quiz_type = submission.quizType
     user_answers_li= submission.answers
     module_id=submission.moduleID
-    proper_submission=True
-    if quiz_type=="miniQuiz":
-        if len(user_answers_li)!=5 or module_id is None or not (2 <= module_id <= 9):
-            proper_submission=False
-        
-    elif quiz_type =="preQuiz" or quiz_type=="postQuiz":
-        if len(user_answers_li)!=40 or module_id!=None:
-            proper_submission=False
-    else:
-        proper_submission=False
 
-    if proper_submission:
-        for answer in user_answers_li:
-            if answer not in ["A","B","C","D"]:
-                proper_submission=False
-    if not proper_submission:
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid quiz submission."
-        )
     quiz_review_results=answer_check(quiz_type, user_answers_li, module_id)
     quiz_scores=quiz_review_results["quizScore"]
     quiz_scores_dict={}
@@ -610,8 +794,23 @@ def quiz_submission_check(submission: QuizSubmission, user_id: int = Depends(get
         saved_answers.module_answer_list = current
         saved_answers.previous_answer_list = previous
         db.commit()
-    if quiz_type=="preQuiz":
+    elif quiz_type=="postQuiz":
+        saved_answers = db.query(models.UserQuizAnswers).filter(
+                models.UserQuizAnswers.user_id == user_id,
+                models.UserQuizAnswers.module_type == "postQuiz"
+                ).first()
+        
+        saved_answers.previous_answer_list = list(user_answers_li)
+        saved_answers.module_answer_list = [None] * 40
+
+        saved_answers.post_quiz_review_allowed = True
+        
+        db.commit()
+
+    elif quiz_type=="preQuiz":
         update_required_modules(quiz_scores, quiz_type, user_id, db)
+
+    
 
     return quiz_review_results
 
@@ -655,3 +854,18 @@ def score_quiz(quiz_type, question_check_results_li):
                 quiz_score_li.append(correct_per_module)
                 correct_per_module=0
         return quiz_score_li
+
+
+
+@app.post("/close-post-quiz-review")
+def close_post_quiz_review(user_id: int = Depends(verify_csrf), db=Depends(get_db)):
+    saved_answers = db.query(models.UserQuizAnswers).filter(
+        models.UserQuizAnswers.user_id == user_id,
+        models.UserQuizAnswers.module_type == "postQuiz"
+    ).first()
+
+    if saved_answers:
+        saved_answers.post_quiz_review_allowed = False
+        db.commit()
+
+    return {"success": True}
