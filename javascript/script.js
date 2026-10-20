@@ -505,7 +505,7 @@ function resetPasswordButtons() {
     const message = document.querySelector("#reset-message");
     const button = form.querySelector('button[type="submit"]');
     const token = new URLSearchParams(window.location.search).get("token");
-
+    console.log("Reset password buttons initialized");
 
     form.querySelectorAll(".input-div").forEach(inputDiv => {
         const passwordInput = inputDiv.querySelector("input");
