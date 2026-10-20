@@ -431,25 +431,32 @@ async function loginUser() {
 }
 
 async function loginUserButtons() {
-    const loginUserButton=document.querySelector('.login-page .login-button');
-    const passwordShowButton=document.querySelector('.login-page .password-show-button');
-    const passwordHideButton=document.querySelector('.login-page .password-hide-button');
+    const loginUserButton = document.querySelector('.login-page.main .login-button');
+    const passwordShowButton = document.querySelector('.login-page.main .password-show-button');
+    const passwordHideButton = document.querySelector('.login-page.main .password-hide-button');
+
+    console.log({loginUserButton, passwordShowButton, passwordHideButton});
+
+    if (!loginUserButton || !passwordShowButton || !passwordHideButton) {
+        console.error("Login page is missing a required button.");
+        return;
+    }
+
     loginUserButton.addEventListener("click", async function () {
-        await loginUser()
+        await loginUser();
     });
 
-    passwordShowButton.addEventListener("click", function () { 
-        passwordShowButton.style.display="none";
-        passwordHideButton.style.display="flex";
-        document.querySelector('.login-page #password').type="text";
-    });
-    passwordHideButton.addEventListener("click", function () { 
-        passwordShowButton.style.display="flex";
-        passwordHideButton.style.display="none";
-        document.querySelector('.login-page #password').type="password";
+    passwordShowButton.addEventListener("click", function () {
+        passwordShowButton.style.display = "none";
+        passwordHideButton.style.display = "flex";
+        document.querySelector('.login-page.main #password').type = "text";
     });
 
-
+    passwordHideButton.addEventListener("click", function () {
+        passwordShowButton.style.display = "flex";
+        passwordHideButton.style.display = "none";
+        document.querySelector('.login-page.main #password').type = "password";
+    });
 }
 
 /*===================================================
@@ -498,6 +505,25 @@ function resetPasswordButtons() {
     const message = document.querySelector("#reset-message");
     const button = form.querySelector('button[type="submit"]');
     const token = new URLSearchParams(window.location.search).get("token");
+
+
+    form.querySelectorAll(".input-div").forEach(inputDiv => {
+        const passwordInput = inputDiv.querySelector("input");
+        const showButton = inputDiv.querySelector(".password-show-button");
+        const hideButton = inputDiv.querySelector(".password-hide-button");
+
+        showButton.addEventListener("click", function () {
+            showButton.style.display = "none";
+            hideButton.style.display = "flex";
+            passwordInput.type = "text";
+        });
+
+        hideButton.addEventListener("click", function () {
+            showButton.style.display = "flex";
+            hideButton.style.display = "none";
+            passwordInput.type = "password";
+        });
+    });
 
     form.addEventListener("submit", async function (event) {
         event.preventDefault();
@@ -1897,7 +1923,7 @@ if (document.querySelector('.landing-page')) {
 if (document.querySelector('.create-account-page')) {
     registerUserButtons()
 }
-if (document.querySelector('.login-page')) {
+if (document.querySelector('.login-page.main')) {
     loginUserButtons()
 }
 if (document.querySelector('#forgot-password-form')) {
