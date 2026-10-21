@@ -392,7 +392,28 @@ async function registerUserButtons() {
     createAccountRegistration.addEventListener("click", async function () {
         await createUserAccount()
     });
+
+    document.querySelectorAll('.create-account-page .password-input-div').forEach(div => {
+        const input = div.querySelector('input[type="password"]');
+        const showButton = div.querySelector('.password-show-button');
+        const hideButton = div.querySelector('.password-hide-button');
+
+        if (!input || !showButton || !hideButton) return;
+
+        showButton.addEventListener("click", function () {
+            input.type = "text";
+            showButton.hidden = true;
+            hideButton.hidden = false;
+        });
+
+        hideButton.addEventListener("click", function () {
+            input.type = "password";
+            showButton.hidden = false;
+            hideButton.hidden = true;
+        });
+    });
 }
+
 
 /*===================================================
 Login Page
@@ -1901,7 +1922,14 @@ async function getAdminStatus() {
 }
 
 let login = await checkLogin();
-if (login) { 
+const protectedPage = document.querySelector(
+    '.dashboard-page, .admin-dashboard-page, .my-modules-page, .infographic-page, .quiz-page'
+);
+if (!login && protectedPage) {
+    window.location.replace("../login-page/login.html");
+}
+
+else if (login) { 
     await loadCsrfToken();
     await loadModuleData()
     await loadModuleQuizScores()
