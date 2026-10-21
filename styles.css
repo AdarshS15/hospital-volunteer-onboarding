@@ -444,12 +444,32 @@ header {
 
 }
 
-.computer{
+.journey-right-div {
+    position: relative;
+}
+
+.computer-wrapper {
+    position: relative;
+    width: 730px;
+    margin-top: 30px;
+    margin-left: -20px;
+}
+
+.computer {
+    display: block;
     width: 730px;
     height: 530px;
-    margin-top: 30px;
-    transform: translatex(-30px);
-    margin-left: 10px;
+    margin: 0;
+    transform: none;
+}
+
+.computer-screen {
+    position: absolute;
+    width: 80%;
+    height: 80%;
+    top: 5%;
+    left: 10%;
+    object-fit: fill;
 }
 
 /* ==========================================
