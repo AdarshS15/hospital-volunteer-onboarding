@@ -713,39 +713,34 @@ function dashboardDeeperProgressDiv(moduleData, moduleQuizScores) {
     // Modules Complete Calculation
     let moduleComplete=0;
     moduleData.forEach(module => {
-        if (module.type=="module") {
-            if (module.status=='Completed') {
-                moduleComplete++;
-            }
+        if (module.status=='Completed') {
+            moduleComplete++;
         }
     });
-    deeperProgressDiv.querySelector('.progress-details-div .modules-completed').textContent=`${moduleComplete} of ${moduleData.length-2}`;
-
+    deeperProgressDiv.querySelector('.progress-details-div .modules-completed').textContent=`${moduleComplete} of ${moduleData.length}`;
+    
     // Assessments Passed Calculation
-    let modulePassed=0;
-    const passedModuleScores = Object.entries(module)
-                               .filter(([key, score]) =>
-                               key.startsWith("module") &&
-                               typeof score === "number" &&
-                               score >= 4).length;
-    Object.values(module).filter(score => typeof score === "number" && score >= 4)
-    moduleQuizScores.forEach(module => {
-        if (module.type=="miniQuiz") {
-            modulePassed += passedModuleScores;
+    let assessmentsPassed = 0;
+
+    moduleQuizScores.forEach(quiz => {
+        if (quiz.type === "miniQuiz") {
+            assessmentsPassed += Object.entries(quiz).filter(([key, score]) =>
+                key.startsWith("module") && typeof score === "number" && score >= 4
+            ).length;
         }
-        else {
-            if (module.overallScore>=38 && passedModuleScores==8) {
-                modulePassed ++;
-            }
+        else if (quiz.type === "postQuiz" && quiz.overallScore >= 38) {
+            assessmentsPassed++;
         }
     });
-    deeperProgressDiv.querySelector('.progress-details-div .assessements-passed').textContent=`${modulePassed} of ${moduleData.length}`;
+
+    deeperProgressDiv.querySelector('.progress-details-div .assessements-passed').textContent=`${assessmentsPassed} of 9`;
 
     // Training Time Remaining Calculation
     let trainingTime=0;
     moduleData.forEach(module => {
-        if (module.required==true) {
-            if (module.module=="post-assessment") {
+        if (module.required==true && module.status!='Completed') {
+
+            if (module.type=="assessment") {
                 trainingTime +=(100-(module.progress))/100*30;
             }
             else if (module.type=="module"){
@@ -753,8 +748,8 @@ function dashboardDeeperProgressDiv(moduleData, moduleQuizScores) {
             }
         }
     });
-    trainingTime /= 60 ;
-    deeperProgressDiv.querySelector('.progress-details-div .training-time-remaining').textContent=`${Math.floor(trainingTime)}h ${Math.round((trainingTime-Math.floor(trainingTime))*60)}m`;
+    const totalMinutes = Math.round(trainingTime);
+    deeperProgressDiv.querySelector('.progress-details-div .training-time-remaining').textContent=`${Math.floor(totalMinutes/60)}h ${totalMinutes%60}m`;
 
 
 };
