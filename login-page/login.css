@@ -133,7 +133,7 @@ p {
 .hospital-logo {
     width: 80px;
     height: 80px;
-    filter: invert(30%) sepia(93%) saturate(3750%) hue-rotate(243deg) brightness(83%) contrast(104%);
+    /* filter: invert(30%) sepia(93%) saturate(3750%) hue-rotate(243deg) brightness(83%) contrast(104%); */
     opacity: 75%;
 }
 
@@ -142,7 +142,7 @@ p {
     
     margin: 2px;
     font-size: 10px;
-    color: #A7A7A9;
+    color: #63666A;
 }
 .hospital-name h2 {
     margin: 2px;

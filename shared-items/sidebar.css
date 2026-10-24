@@ -5,6 +5,11 @@
     flex-shrink: 0;
     display: block;
 }
+
+.volentera-logo {
+    height: 50px;
+    width: 50px;
+}
 .sidebar {
     flex-shrink: 0;
     width: 18%;
@@ -41,6 +46,15 @@
     margin-bottom: 10px;
     margin-left: 13px;
 
+}
+
+.sidebar-title span {
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.sidebar-title p {
+    font-size: 11px;
 }
 
 .sidebar-links {
@@ -116,10 +130,7 @@
     border: 1px solid #CBD5E1;
 }
 
-.hospital-logo {
-    height: 55px;
-    width: 55px;
-}
+
 
 .sidebar-links a:not(.active):hover {
     color: #3F249E;

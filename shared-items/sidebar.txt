@@ -1,11 +1,11 @@
 <aside class="sidebar">
     <div class="sidebar-top">
         <div class="sidebar-title">
-            <img src="../images/hospital-logo.png" alt="Hospital cross logo" class="hospital-logo">
+            <img src="../images/VolenteraLogo.png" alt="Hospital cross logo" class="volentera-logo">
             <div>
-                <span>CommonSpirit Health</span>
-                <h2>MediLearn</h2>
-                <p>St. Anthony North</p>
+                <span>Empowering Volunteers</span>
+                <h2>Volentera</h2>
+                <p>Training Platform</p>
             </div>
         </div>
         <hr class="horizontal-line">

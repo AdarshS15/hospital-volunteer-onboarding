@@ -49,27 +49,27 @@ body {
 .hospital-logo {
     width: 85px;
     height: 85px;
-    filter: invert(30%) sepia(93%) saturate(3750%) hue-rotate(243deg) brightness(83%) contrast(104%);
+
     opacity: 75%;
-    transform: translateY(8px);
+    transform: translateY(-8px);
 }
 
 
 .hospital-name h5 {
     
     margin: 4px;
-    font-size: 10px;
-    color: #A7A7A9;
+    font-size: 14px;
+    color: #63666A;
 }
 .hospital-name h2 {
     margin: 4px;
-    font-size: 23px;
+    font-size: 27px;
     color: #162A63;
     width:200px
 }
 .hospital-name p {
     margin: 4px;
-    font-size: 16px;
+    font-size: 18px;
     color: #4A2DBF;
     font-weight: bold;
 }
