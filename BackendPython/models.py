@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, JSON, UniqueConstraint, DateTime
 from database_creation import Base
 
-
+# Store volunteer account information and cumulative training activity.
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
@@ -11,7 +11,8 @@ class User(Base):
     last_name = Column(String, nullable=False)
     last_activity = Column(DateTime(timezone=True), nullable=True)
     training_seconds = Column(Integer, nullable=False, default=0)
-    
+
+# Store hashed, time-limited password reset tokens to prevent token reuse.   
 class PasswordResetToken(Base):
     __tablename__ = "password_reset_tokens"
 
@@ -21,6 +22,7 @@ class PasswordResetToken(Base):
     expires_at = Column(DateTime(timezone=True), nullable=False)
     used_at = Column(DateTime(timezone=True), nullable=True)
 
+# Track each volunteer's module progress and adaptive training requirements.
 class ModuleData(Base):
     __tablename__ = "module_data"
     id = Column(Integer, primary_key=True, index=True)
@@ -33,7 +35,7 @@ class ModuleData(Base):
         UniqueConstraint("user_id", "module_id"),
     )
 
-
+# Store topic-level scores for pre-assessments, post-assessments, and mini-quizzes.
 class QuizScores(Base):
     __tablename__ = "module_quiz_scores"
 
@@ -47,6 +49,7 @@ class QuizScores(Base):
         UniqueConstraint("user_id", "module_type", "module_id"),
     )
 
+# Preserve active and previous quiz answers to support progress restoration, retakes, and answer reviews.
 class UserQuizAnswers(Base):
     __tablename__ = "user_quiz_answers"
     id = Column(Integer, primary_key=True, index=True)
@@ -59,6 +62,7 @@ class UserQuizAnswers(Base):
     UniqueConstraint("user_id", "module_type"),
 )
 
+# Manage authenticated sessions with expiration timestamps and CSRF protection.
 class UserSession(Base):
     __tablename__ = "user_sessions"
     id = Column(Integer, primary_key=True, index=True)
@@ -66,7 +70,8 @@ class UserSession(Base):
     session_id = Column(String(255), unique=True, nullable=False)
     expires_at=Column(DateTime(timezone=True), nullable=False)
     csrf_token = Column(String(64), nullable=False)
-    
+
+# Record which privacy policy version each volunteer has acknowledged and when. 
 class PrivacyAcknowledgment(Base):
     __tablename__ = "privacy_acknowledgments"
 

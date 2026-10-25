@@ -165,7 +165,7 @@ const defaultquizAnswers = {
     "miniQuiz": Array(40).fill(null)
 };
 
-
+// Track active training time, excluding periods when the page is hidden or the user is inactive for 60 seconds.
 function startTrainingTimer() {
     let trainingSeconds = 0;
     let lastActivity = performance.now();
@@ -319,13 +319,16 @@ Landing Page
 =====================================================*/
 function landingButtons() {
     const getStartedButton=document.querySelector('.hero .assessment-button')
+    // Future implementation: Allow the "Get Started" button to direct
+    // logged-in users to the pre-assessment instead of the login page.
+
     // getStartedButton.addEventListener("click", function () {
     //     // if (login) {
     //     //     getStartedButton.href='question-template/question-template.html';
     //     //     sessionStorage.setItem("quizType", "preQuiz");
     //     //     sessionStorage.setItem("selectedModule", "pre-assessment");
     //     // }
-    //     
+        
     // })
     getStartedButton.href='login-page/login.html';
     
@@ -795,6 +798,7 @@ function dashboardNextUpDiv(moduleData) {
     };  
 };
 
+// Calculate dashboard statistics from module completion, assessment scores, and estimated remaining training time.
 function dashboardDeeperProgressDiv(moduleData, moduleQuizScores) {
     const deeperProgressDiv=document.querySelector('.dashboard-page .deeper-progress-div');
 
@@ -875,7 +879,7 @@ function filterAdminUserRows() {
         const status = statusFilter.value;
         const passed = passedFilter.value;
         const progress = progressFilter.value;
-
+        // Apply search, completion, assessment, and progress filters together to the administrator's volunteer list.
         const filteredUsers = admin_users_data_li.filter(user => {
             const fullName = `${user.first_name} ${user.last_name}`.toLowerCase();
 
@@ -1031,6 +1035,7 @@ function myModulesRowsDiv(moduleData, moduleQuizScores) {
                 moduleStatus.classList.add('not-started');
             }
         }
+        // Keep training modules locked until the volunteer completes the initial assessment.
         else if (moduleData[0].progress==100) {
             moduleStatus.textContent = module.status;
             if (module.status=="Completed") {
@@ -1050,7 +1055,7 @@ function myModulesRowsDiv(moduleData, moduleQuizScores) {
             moduleStatus.textContent = "locked";
             moduleStatus.classList.add('locked');
         }
-        // Only unlock final assessment if other required modules have a score above 4.
+        // Unlock the final assessment only when all applicable required modules meet the mini-quiz passing threshold.
         if (module.module=="post-assessment") {
 
             moduleData.forEach(element => {
@@ -1070,25 +1075,7 @@ function myModulesRowsDiv(moduleData, moduleQuizScores) {
         else {
             moduleClone.querySelector('.module-subsections').style.cursor = "default";
         }
-            
-        
-        
-        
-        // const module_status = moduleClone.querySelector('.module-subsections .module-status h6 ');
-        // module_status.textContent = module.status;
-        // if (module.status=="Completed") {
-        //     // Add a single class
-        //     module_status.classList.add('completed');
-        // }
-        // else if (module.status=="In Progress") {
-        //     // Add a single class
-        //     module_status.classList.add('in-progress');
-        // }
-        // else if (module.status=="Not Started") {
-        //     // Add a single class
-        //     module_status.classList.add('not-started');
-        // }
-        
+
         if (module.progress==100) {
             moduleClone.querySelector('.module-subsections .module-time span').textContent = "------"
         } 
@@ -1275,6 +1262,7 @@ async function fillInfographicPage(infographicModule, moduleData, subsectionNum)
         document.querySelector('.infographic-page .learning-remember').style.display="none";
         document.querySelector('.infographic-page .mini-quiz').style.display="flex";
 
+        // Each module uses five positions in the shared mini-quiz answer array; restore saved answers and detect previous attempts.
         const sliceStart = (infographicModule.id - 1) * 5;
         const currentAnswers = quizAnswers.miniQuiz.slice(sliceStart, sliceStart + 5);
         const previousAnswers = (quizAnswers.previousMiniQuiz || []).slice(sliceStart, sliceStart + 5);
@@ -1386,6 +1374,7 @@ function infographicButtons() {
     nextModuleButton.addEventListener("click", async function () {
         const currentSelectedModule = sessionStorage.getItem("selectedModule");
         const currentModuleIndex=moduleData.findIndex(item => item.module === currentSelectedModule)
+        // Find the next required, incomplete training module instead of advancing through every module.
         let nextSelectedModule;
         let nextModuleIndex;
         for (let i=currentModuleIndex+1; i<moduleData.length; i++) {
@@ -1426,7 +1415,7 @@ function infographicButtons() {
     //     fillInfographicPage(infographicModule,moduleData, subsectionNumberLocal);
     // })
 
-
+// Update module progress without decreasing previously completed infographic progress; calculate assessment progress from answered questions.
 async function changeProgress(moduleData, selectedModule) {
     const quizType = sessionStorage.getItem("quizType");
     const moduleItem = moduleData.find(item => item.module === selectedModule);
@@ -1457,11 +1446,7 @@ async function changeProgress(moduleData, selectedModule) {
 Quiz Page
 =====================================================*/
 async function fillMiniQuizPage(moduleSelected, moduleData, questions, questionNumLocal, moduleAnswersSubset) {
-    // // Will be used for a check later in the function to 
-    // const storedModuleQuizScores = sessionStorage.getItem("moduleQuizScores");
-    // const moduleQuizScores = storedModuleQuizScores
-    //                         ? JSON.parse(storedModuleQuizScores)
-    //                         : defaultModuleQuizScores;
+
     const quizType= sessionStorage.getItem("quizType");
     const quizSubmitted = sessionStorage.getItem("reviewQuiz") === "true";
     const startIndex = (moduleSelected.id - 2) * 5;
@@ -1502,18 +1487,9 @@ async function fillMiniQuizPage(moduleSelected, moduleData, questions, questionN
 
 }
 async function fillQuizPage(moduleSelected, moduleData, questions, questionNumLocal, moduleAnswers) {
-    // // Will be used for a check later in the function to 
-    // const storedModuleQuizScores = sessionStorage.getItem("moduleQuizScores");
-    // const moduleQuizScores = storedModuleQuizScores
-    //                         ? JSON.parse(storedModuleQuizScores)
-    //                         : defaultModuleQuizScores;
     const quizType= sessionStorage.getItem("quizType");
     const reviewQuiz = sessionStorage.getItem("reviewQuiz") === "true";
     const quizSubmitted = quizType === "postQuiz" ? reviewQuiz : isQuizSubmitted(moduleQuizScores, quizType, moduleSelected);
-    // const start = (moduleSelected.id - 2) * 5;
-    // if (quizSubmitted) {
-    //     moduleAnswersSubset = (quizAnswers.previousMiniQuiz || []).slice(start, start + 5);
-    // }
 
     // Fill Quiz page header with header title and question number
     document.querySelector('.quiz-page .center-header-title h5').textContent = `Module ${moduleSelected.id}: ${moduleSelected.title}`;
@@ -1567,6 +1543,7 @@ function isQuizSubmitted(moduleQuizScores, quizType, moduleSelected) {
     return false;
 }
 
+// Display correct answers, the volunteer's selections, and explanations after an assessment is submitted.
 function fillQuestionReview(questionNumLocal, moduleAnswers, result, quizType) {
     const nextQuestionButton = document.querySelector('.quiz-page .next-button');
     const backQuestionButton = document.querySelector('.quiz-page .back-button');
@@ -1635,6 +1612,8 @@ function fillQuestionReview(questionNumLocal, moduleAnswers, result, quizType) {
     
 
 }
+
+// Enable submission only when every question has been answered and the volunteer reaches the final question.
 function quizSubmissionButtonSwitch(moduleAnswers, nextQuestionButton, moduleQuizScores) {
     const quizType = sessionStorage.getItem("quizType");
 
@@ -1651,6 +1630,7 @@ function quizSubmissionButtonSwitch(moduleAnswers, nextQuestionButton, moduleQui
         document.querySelector('.quiz-page .submit-button').style.display = "flex";
     }
 }
+
 function QuizButtons(moduleSelected, moduleData, quizQuestions, moduleAnswers, moduleQuizScores) {
     const restoreQuestion = sessionStorage.getItem("restoreQuizQuestion");
     const answerButtons=document.querySelectorAll('.quiz-page .question-div .answer-choice')
@@ -1844,9 +1824,11 @@ function QuizButtons(moduleSelected, moduleData, quizQuestions, moduleAnswers, m
             await fillQuizPage(moduleSelected, moduleData, quizQuestions, questionNumLocal, moduleAnswers)
             
         }
+
+        // Use pre-assessment topic scores to identify knowledge gaps
+        // and assign additional training modules to the volunteer.
         if (quizType=="preQuiz") {
             const specificModule=moduleQuizScores.find(moduleScores => moduleScores.type==="preQuiz")
-            console.log("PREQUIZ SCORES:", specificModule);
             for (let i=2; i<10; i++) {
                 const moduleID=`module${i}`;
                 if (specificModule[moduleID]<=4) {
@@ -1954,6 +1936,8 @@ async function loadCsrfToken() {
 }
 
 
+// Merge each module's default configuration with the volunteer's
+// saved progress, completion status, and required-module assignments.
 async function loadModuleData() {
     const response = await fetch(`${API_BASE}/get-module-data`, {
         method: "GET",

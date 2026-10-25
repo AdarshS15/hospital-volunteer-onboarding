@@ -3,6 +3,7 @@ import hashlib
 import os
 import smtplib
 import ssl
+from collections import defaultdict
 from email.message import EmailMessage
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -38,6 +39,7 @@ limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+# Apply security headers to reduce browser-based risks such as clickjacking and content-type sniffing.
 @app.middleware("http")
 async def security_headers(request: Request, call_next):
     response = await call_next(request)
@@ -55,7 +57,7 @@ def get_db():
     finally:
         db.close()
 
-
+# Authenticate requests using the session cookie and reject missing, invalid, or expired sessions.
 def get_current_user_id(session_id: str = Cookie(None), db=Depends(get_db)):
     if session_id is None:
         raise HTTPException(status_code=401, detail="Not authenticated.")
@@ -76,6 +78,7 @@ def get_current_user_id(session_id: str = Cookie(None), db=Depends(get_db)):
 
     return session.user_id
 
+# Restrict protected features until the user acknowledges the current privacy policy version.
 def require_privacy_acknowledgment(
     user_id: int = Depends(get_current_user_id),
     db=Depends(get_db)
@@ -93,6 +96,7 @@ def require_privacy_acknowledgment(
 
     return user_id
 
+# Validate the CSRF token against the authenticated session to protect state-changing requests.
 def verify_csrf(
     request: Request,
     user_id: int = Depends(get_current_user_id),
@@ -311,7 +315,7 @@ class UserLogin(BaseModel):
             raise ValueError("Password must not exceed 72 bytes.")
         return value
 
-
+# Authenticate credentials and create an eight-hour session with a unique session ID and CSRF token.
 @app.post("/login")
 @limiter.limit("5/minute")
 def login(request: Request, user: UserLogin, response: Response, db=Depends(get_db)):
@@ -345,7 +349,7 @@ def login(request: Request, user: UserLogin, response: Response, db=Depends(get_
         value=session_id,
         httponly=True,
         samesite="lax",
-        secure=False,
+        secure=True,
         max_age=60 * 60 * 8
     )
     update_last_activity(db_user.id, db)
@@ -361,11 +365,11 @@ def send_reset_email(recipient_email: str, reset_link: str):
     app_password = os.environ["SMTP_APP_PASSWORD"]
 
     message = EmailMessage()
-    message["From"] = f"MediLearn Support <{sender}>"
+    message["From"] = f"Volentera Support <{sender}>"
     message["To"] = recipient_email
-    message["Subject"] = "Reset your MediLearn password"
+    message["Subject"] = "Reset your Volentera password"
     message.set_content(
-        f"Someone requested a password reset for your MediLearn account.\n\n"
+        f"Someone requested a password reset for your Volentera account.\n\n"
         f"Reset your password here:\n{reset_link}\n\n"
         "This link expires in 30 minutes. If you didn't request this, ignore this email."
     )
@@ -375,9 +379,11 @@ def send_reset_email(recipient_email: str, reset_link: str):
         smtp.send_message(message)
 
 
+
 class ForgotPasswordRequest(BaseModel):
     email: EmailStr
 
+# Generate a time-limited password reset token and store only its SHA-256 hash in the database.
 @app.post("/forgot-password")
 @limiter.limit("3/minute")
 def forgot_password(request: Request, data: ForgotPasswordRequest, db=Depends(get_db)):
@@ -474,8 +480,9 @@ def get_my_account(user_id: int = Depends(get_current_user_id), db=Depends(get_d
         "last_name": db_user.last_name
     }
 
-from collections import defaultdict
 
+
+# Aggregate volunteer records, module progress, and assessment scores into individual performance summaries.
 def get_admin_user_data(db):
     users = db.query(models.User).all()
     modules = db.query(models.ModuleData).all()
@@ -516,6 +523,7 @@ def get_admin_user_data(db):
         else:
             status = "In Progress"
 
+        # Require both a minimum overall post-assessment score and atleast four correct answers in every topic.
         passed = post_completed and post_total >= 37 and all(score.score >= 4 for score in post_scores)
 
         admin_users_data.append({
@@ -743,6 +751,7 @@ class ModuleProgressUpdate(BaseModel):
     progress: int = Field(ge=0, le=100)
 
 
+# Validate progress updates and prevent modules from being marked complete before their assessments are submitted.
 @app.post("/update-module-progress")
 @limiter.limit("50/minute")
 def update_module_progress(request: Request,module: ModuleProgressUpdate, user_id: int = Depends(verify_csrf_and_privacy), db=Depends(get_db)):
@@ -802,7 +811,7 @@ class QuizScoreUpdate(BaseModel):
     module_type: Literal["miniQuiz", "preQuiz", "postQuiz"]
     module_scores: dict[module_name, quiz_score_valid | None]
 
-# @app.post("/update-quiz-scores")
+
 def update_quiz_scores(data: QuizScoreUpdate, user_id: int, db):
     for module, score in data.module_scores.items():
         moduleID = int(module.replace("module", ""))
@@ -810,6 +819,7 @@ def update_quiz_scores(data: QuizScoreUpdate, user_id: int, db):
         specific_quiz_score.score=score
     db.commit()
 
+# Identify knowledge gaps from pre-assessment scores and mark the corresponding training modules as required.
 def update_required_modules(quiz_scores_li, quiz_type, user_id: int, db):
     user_module = db.query(models.ModuleData).filter(models.ModuleData.user_id == user_id, models.ModuleData.module_id.notin_([1, 10])).order_by(models.ModuleData.module_id).all()
     for i in range(0,8):
@@ -846,6 +856,7 @@ class QuizSubmission(BaseModel):
     answers: list[Literal["A", "B", "C", "D"]]
     moduleID: int | None = Field(default=None, ge=1)
 
+    # Validate the number of answers and module ID based on the assessment type before accepting a submission.
     @model_validator(mode="after")
     def validate_submission(self):
         if self.quizType == "miniQuiz":
@@ -856,7 +867,8 @@ class QuizSubmission(BaseModel):
             if len(self.answers) != 40 or self.moduleID != expected_id:
                 raise ValueError("Invalid pre/post-quiz submission.")
         return self
-
+    
+# Grade submitted answers, persist assessment scores, and update the volunteer's training requirements or review history.
 @app.post("/submit-quiz")
 @limiter.limit("5/minute")
 def quiz_submission_check(request: Request, submission: QuizSubmission, user_id: int = Depends(verify_csrf_and_privacy), db=Depends(get_db)): 
@@ -883,6 +895,7 @@ def quiz_submission_check(request: Request, submission: QuizSubmission, user_id:
             models.UserQuizAnswers.module_type == "miniQuiz"
         ).first()
 
+        # Preserve the latest completed mini-quiz attempt for review and clear its active answers to support retakes.
         start = (module_id - 2) * 5
         current = list(saved_answers.module_answer_list)
         previous = list(saved_answers.previous_answer_list or [None] * 40)
@@ -915,7 +928,7 @@ def quiz_submission_check(request: Request, submission: QuizSubmission, user_id:
 
         
 
-
+# Compare submitted answers against the answer key and return question-level feedback and scores.
 def answer_check(quiz_type, user_answers_li, module_id):
     question_check_results_li=[]
     
@@ -939,6 +952,7 @@ def answer_check(quiz_type, user_answers_li, module_id):
             "questionResults": question_check_results_li,
             "quizScore": quiz_score}
 
+# Calculate mini-quiz scores directly or group full-assessment results into eight five-question topic scores.
 def score_quiz(quiz_type, question_check_results_li):
     if quiz_type=="miniQuiz":
         quiz_score=len(list(filter(lambda correct: correct == True, question_check_results_li)))
