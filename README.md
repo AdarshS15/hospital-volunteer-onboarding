@@ -4,7 +4,7 @@
 
 The platform uses adaptive learning, interactive assessments, and progress tracking to make hospital volunteer training more accessible, personalized, and efficient.
 
-🌐 **Live Website:** [https://volentera.com](https://volentera.com)
+**Live Website:** [https://volentera.com](https://volentera.com)
 
 ## Overview
 
