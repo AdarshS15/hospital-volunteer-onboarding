@@ -349,7 +349,7 @@ def login(request: Request, user: UserLogin, response: Response, db=Depends(get_
         value=session_id,
         httponly=True,
         samesite="lax",
-        secure=True,
+        secure=os.getenv("ENVIRONMENT") == "production",
         max_age=60 * 60 * 8
     )
     update_last_activity(db_user.id, db)
