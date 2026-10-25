@@ -1920,9 +1920,27 @@ async function checkLogin() {
     });
 
     if (!response.ok) return false;
+
     const user = await response.json();
     firstName = user.first_name;
     lastName = user.last_name;
+
+    // Check privacy acknowledgment
+    const privacyResponse = await fetch(`${API_BASE}/privacy-status`, {
+        method: "GET",
+        credentials: "include"
+    });
+
+    if (!privacyResponse.ok) return false;
+
+    const privacyResult = await privacyResponse.json();
+
+    if (!privacyResult.accepted) {
+        if (document.querySelector(".login-page")) {
+            document.querySelector("#privacy-modal").style.display = "flex";
+        }
+        return false;
+    }
     return true;
 }
 
@@ -1989,6 +2007,13 @@ async function getAdminStatus() {
 }
 
 let login = await checkLogin();
+console.log("LOGIN CHECK RESULT:", {
+    login,
+    page: window.location.pathname,
+    protectedPage: !!document.querySelector(
+        '.dashboard-page, .admin-dashboard-page, .my-modules-page, .infographic-page, .quiz-page'
+    )
+});
 const protectedPage = document.querySelector(
     '.dashboard-page, .admin-dashboard-page, .my-modules-page, .infographic-page, .quiz-page'
 );
@@ -1996,7 +2021,7 @@ if (!login && protectedPage) {
     window.location.replace("../login-page/login.html");
 }
 
-else if (login) { 
+else if (login && protectedPage) { 
     await loadCsrfToken();
     await loadModuleData()
     await loadModuleQuizScores()
@@ -2022,7 +2047,7 @@ if (document.querySelector('#forgot-password-form')) {
 if (document.querySelector("#reset-password-form")) {
     resetPasswordButtons();
 }
-if (document.querySelector('.dashboard-page')) {
+if (login && document.querySelector('.dashboard-page')) {
     await fillSidebarContainer('[data-page="dashboard"]');
 
     const adminLink = document.querySelector("#admin-link");
@@ -2038,7 +2063,7 @@ if (document.querySelector('.dashboard-page')) {
     dashboardDeeperProgressDiv(moduleData, moduleQuizScores);
     
 }
-if (document.querySelector('.admin-dashboard-page')) {
+if (login && document.querySelector('.admin-dashboard-page')) {
     await fillSidebarContainer('[data-page="admin-dashboard"]');
 
     const adminLink = document.querySelector("#admin-link");
@@ -2052,7 +2077,7 @@ if (document.querySelector('.admin-dashboard-page')) {
 }
 
 
-if (document.querySelector('.my-modules-page')) {
+if (login && document.querySelector('.my-modules-page')) {
     await fillSidebarContainer('[data-page="my-modules"]')
 
     const adminLink = document.querySelector("#admin-link");
@@ -2067,7 +2092,7 @@ if (document.querySelector('.my-modules-page')) {
     myModuleSummaryInformationDiv(moduleData)
 }
 
-if (document.querySelector('.infographic-page') || document.querySelector('.quiz-page')) {
+if (login && (document.querySelector('.infographic-page') || document.querySelector('.quiz-page'))) {
     trainingTimer = startTrainingTimer();
 
     let lastSavedSeconds = 0;
@@ -2093,7 +2118,7 @@ if (document.querySelector('.infographic-page') || document.querySelector('.quiz
     });
 }
 
-if (document.querySelector('.infographic-page')) {
+if (login && document.querySelector('.infographic-page')) {
     
     await fillSidebarContainer('[data-page="my-modules"]')
 
@@ -2115,7 +2140,7 @@ if (document.querySelector('.infographic-page')) {
     
 
 }
-if (document.querySelector('.quiz-page')) {
+if (login && document.querySelector('.quiz-page')) {
 
     let quizQuestions;
     let quizType = sessionStorage.getItem("quizType");

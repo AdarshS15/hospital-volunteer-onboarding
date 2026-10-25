@@ -549,7 +549,7 @@ def get_admin_status(user_id: int = Depends(get_current_user_id), db=Depends(get
 
 
 @app.get("/get-admin-data")
-def get_admin_data(user_id: int = Depends(verify_csrf_and_privacy), db=Depends(get_db)):
+def get_admin_data(user_id: int = Depends(require_privacy_acknowledgment), db=Depends(get_db)):
     current_user = db.query(models.User).filter(models.User.id == user_id).first()
 
     if current_user is None or current_user.email.lower() not in ADMIN_EMAILS:
@@ -566,7 +566,7 @@ def get_admin_data(user_id: int = Depends(verify_csrf_and_privacy), db=Depends(g
     return admin_users_data
 
 @app.get("/get-admin-metrics")
-def get_admin_metrics(user_id: int = Depends(verify_csrf_and_privacy), db=Depends(get_db)):
+def get_admin_metrics(user_id: int = Depends(require_privacy_acknowledgment), db=Depends(get_db)):
     current_user = db.query(models.User).filter(models.User.id == user_id).first()
 
     if current_user is None or current_user.email.lower() not in ADMIN_EMAILS:
