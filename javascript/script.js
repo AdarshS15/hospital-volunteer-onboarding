@@ -319,13 +319,16 @@ Landing Page
 =====================================================*/
 function landingButtons() {
     const getStartedButton=document.querySelector('.hero .assessment-button')
-    getStartedButton.addEventListener("click", function () {
-        if (login) {
-            getStartedButton.href='question-template/question-template.html';
-            sessionStorage.setItem("quizType", "preQuiz");
-            sessionStorage.setItem("selectedModule", "pre-assessment");
-        }
-    })
+    // getStartedButton.addEventListener("click", function () {
+    //     // if (login) {
+    //     //     getStartedButton.href='question-template/question-template.html';
+    //     //     sessionStorage.setItem("quizType", "preQuiz");
+    //     //     sessionStorage.setItem("selectedModule", "pre-assessment");
+    //     // }
+    //     
+    // })
+    getStartedButton.href='login-page/login.html';
+    
     
     
 }
