@@ -173,7 +173,7 @@ body {
     margin-top: 10px;
     width: 100%;
     gap:12px;
-    margin-bottom: 30px;
+    margin-bottom: 15px;
     position: relative;
 }
 
@@ -368,7 +368,7 @@ body {
 }
 
 .help-div {
-    margin-top: 20px;
+    margin-top: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -433,4 +433,34 @@ body {
 .eye-hidden-icon {
     width: 25px;
     height: 25px;
+}
+
+.privacy-registration {
+    margin-left: 10px;
+    margin-bottom: 10px;
+    padding: 0;
+    width: 100%;
+    text-align: left;
+}
+
+.privacy-registration label {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 1;
+}
+
+.privacy-registration input[type="checkbox"] {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    margin-top: 3px;
+    cursor: pointer;
+}
+
+.privacy-registration a {
+    color: #4930c4;
+    text-decoration: underline;
 }

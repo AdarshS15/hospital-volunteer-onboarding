@@ -24,6 +24,7 @@ from database_creation import engine, SessionLocal
 models.Base.metadata.create_all(bind=engine)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 ADMIN_EMAILS=["test.maker1@gmail.com","adarsh.shankarling1@gmail.com", "steph.webb@commonspirit.org" ]
+CURRENT_PRIVACY_VERSION = "2026-10-25"
 
 app = FastAPI()
 app.add_middleware(
@@ -75,6 +76,23 @@ def get_current_user_id(session_id: str = Cookie(None), db=Depends(get_db)):
 
     return session.user_id
 
+def require_privacy_acknowledgment(
+    user_id: int = Depends(get_current_user_id),
+    db=Depends(get_db)
+):
+    acknowledgment = db.query(models.PrivacyAcknowledgment).filter(
+        models.PrivacyAcknowledgment.user_id == user_id,
+        models.PrivacyAcknowledgment.policy_version == CURRENT_PRIVACY_VERSION
+    ).first()
+
+    if acknowledgment is None:
+        raise HTTPException(
+            status_code=403,
+            detail="Privacy policy acknowledgment required."
+        )
+
+    return user_id
+
 def verify_csrf(
     request: Request,
     user_id: int = Depends(get_current_user_id),
@@ -90,6 +108,12 @@ def verify_csrf(
     if session is None or csrf_token is None or not secrets.compare_digest(csrf_token, session.csrf_token):
         raise HTTPException(status_code=403, detail="Invalid CSRF token.")
 
+    return user_id
+
+def verify_csrf_and_privacy(
+    user_id: int = Depends(verify_csrf),
+    _: int = Depends(require_privacy_acknowledgment)
+):
     return user_id
 
 def hash_password(password: str):
@@ -126,6 +150,37 @@ def get_me(user_id: int = Depends(get_current_user_id)):
         "user_id": user_id
     }
 
+@app.get("/privacy-status")
+def privacy_status(user_id: int = Depends(get_current_user_id), db=Depends(get_db)):
+    acknowledgment = db.query(models.PrivacyAcknowledgment).filter(
+        models.PrivacyAcknowledgment.user_id == user_id,
+        models.PrivacyAcknowledgment.policy_version == CURRENT_PRIVACY_VERSION
+    ).first()
+
+    return {
+        "accepted": acknowledgment is not None,
+        "policy_version": CURRENT_PRIVACY_VERSION
+    }
+
+@app.post("/accept-privacy")
+def accept_privacy(user_id: int = Depends(verify_csrf), db=Depends(get_db)):
+    acknowledgment = db.query(models.PrivacyAcknowledgment).filter(
+        models.PrivacyAcknowledgment.user_id == user_id,
+        models.PrivacyAcknowledgment.policy_version == CURRENT_PRIVACY_VERSION
+    ).first()
+
+    if acknowledgment is None:
+        acknowledgment = models.PrivacyAcknowledgment(
+            user_id=user_id,
+            policy_version=CURRENT_PRIVACY_VERSION,
+            acknowledged_at=datetime.now(timezone.utc)
+        )
+
+        db.add(acknowledgment)
+        db.commit()
+
+    return {"accepted": True}
+
 
 @app.post("/logout")
 def logout(response: Response, session_id: str = Cookie(None), db=Depends(get_db)):
@@ -149,6 +204,13 @@ class UserCreate(BaseModel):
     password: str = Field(min_length=12)
     first_name: str = Field(min_length=1, max_length=100)
     last_name: str = Field(min_length=1, max_length=100)
+    privacy_accepted: bool
+    @field_validator("privacy_accepted")
+    @classmethod
+    def validate_privacy_accepted(cls, value: bool):
+        if value is not True:
+            raise ValueError("You must acknowledge the Privacy and Data Use Notice.")
+        return value
     
     @field_validator("first_name", "last_name")
     @classmethod
@@ -164,6 +226,9 @@ class UserCreate(BaseModel):
         if len(value.encode("utf-8")) > 72:
             raise ValueError("Password must not exceed 72 bytes.")
         return value
+
+    
+    
     
 @app.post("/register")
 @limiter.limit("3/minute")
@@ -185,8 +250,17 @@ def register(request: Request, user: UserCreate, db = Depends(get_db)):
         last_name=user.last_name
     )
     db.add(new_user)
-    db.commit()
+    db.flush()
     db.refresh(new_user)
+
+    acknowledgment = models.PrivacyAcknowledgment(
+        user_id=new_user.id,
+        policy_version=CURRENT_PRIVACY_VERSION,
+        acknowledged_at=datetime.now(timezone.utc)
+    )
+    db.add(acknowledgment)
+
+
     for i in range(1,11):
         required=False
         if i==1 or i==10:
@@ -324,7 +398,7 @@ def forgot_password(request: Request, data: ForgotPasswordRequest, db=Depends(ge
         db.add(reset_record)
         db.commit()
 
-        reset_link = f"https://medilearn-beta.duckdns.org/reset-password/reset-password.html?token={token}"
+        reset_link = f"https://volentera.com/reset-password/reset-password.html?token={token}"
         try:
             send_reset_email(user.email, reset_link)
         except (smtplib.SMTPException, OSError) as exc:
@@ -475,7 +549,7 @@ def get_admin_status(user_id: int = Depends(get_current_user_id), db=Depends(get
 
 
 @app.get("/get-admin-data")
-def get_admin_data(user_id: int = Depends(get_current_user_id), db=Depends(get_db)):
+def get_admin_data(user_id: int = Depends(verify_csrf_and_privacy), db=Depends(get_db)):
     current_user = db.query(models.User).filter(models.User.id == user_id).first()
 
     if current_user is None or current_user.email.lower() not in ADMIN_EMAILS:
@@ -492,7 +566,7 @@ def get_admin_data(user_id: int = Depends(get_current_user_id), db=Depends(get_d
     return admin_users_data
 
 @app.get("/get-admin-metrics")
-def get_admin_metrics(user_id: int = Depends(get_current_user_id), db=Depends(get_db)):
+def get_admin_metrics(user_id: int = Depends(verify_csrf_and_privacy), db=Depends(get_db)):
     current_user = db.query(models.User).filter(models.User.id == user_id).first()
 
     if current_user is None or current_user.email.lower() not in ADMIN_EMAILS:
@@ -550,7 +624,7 @@ class TrainingTimeRequest(BaseModel):
 
 @app.post("/save-training-time", status_code=204)
 @limiter.limit("5/minute")
-def save_training_time(request: Request, data: TrainingTimeRequest, user_id: int = Depends(verify_csrf), db=Depends(get_db)):
+def save_training_time(request: Request, data: TrainingTimeRequest, user_id: int = Depends(verify_csrf_and_privacy), db=Depends(get_db)):
     if data.seconds <= 0 or data.seconds > 60:
         raise HTTPException(status_code=400, detail="Invalid training duration.")
 
@@ -564,7 +638,7 @@ def save_training_time(request: Request, data: TrainingTimeRequest, user_id: int
 
 
 @app.get("/get-module-data")
-def get_my_modules(user_id: int = Depends(get_current_user_id), db=Depends(get_db)):
+def get_my_modules(user_id: int = Depends(require_privacy_acknowledgment), db=Depends(get_db)):
     modules_to_return=[]
     module_rows = db.query(models.ModuleData).filter(models.ModuleData.user_id == user_id).all() 
     for module_row in module_rows:
@@ -577,7 +651,7 @@ def get_my_modules(user_id: int = Depends(get_current_user_id), db=Depends(get_d
 
 
 @app.get("/get-quiz-scores")
-def get_my_quiz_scores(user_id: int = Depends(get_current_user_id), db=Depends(get_db)):
+def get_my_quiz_scores(user_id: int = Depends(require_privacy_acknowledgment), db=Depends(get_db)):
     scores_to_return=[
                         {"type": "miniQuiz",},
                         {"type": "preQuiz", "overallScore": None},
@@ -598,7 +672,7 @@ def get_my_quiz_scores(user_id: int = Depends(get_current_user_id), db=Depends(g
     return scores_to_return
 
 @app.get("/get-quiz-answers")
-def get_my_quiz_answers(user_id: int = Depends(get_current_user_id), db=Depends(get_db)):
+def get_my_quiz_answers(user_id: int = Depends(require_privacy_acknowledgment), db=Depends(get_db)):
     answers_to_return = {"preQuiz": [], "postQuiz": [], "miniQuiz": [], "previousMiniQuiz": []}
     answer_rows = db.query(models.UserQuizAnswers).filter(models.UserQuizAnswers.user_id == user_id).all()
 
@@ -610,7 +684,7 @@ def get_my_quiz_answers(user_id: int = Depends(get_current_user_id), db=Depends(
     return answers_to_return
 
 @app.get("/get-quiz-review")
-def get_my_quiz_review(quiz_type: str, module_id: int|None=None, user_id: int = Depends(get_current_user_id), db=Depends(get_db)):
+def get_my_quiz_review(quiz_type: str, module_id: int|None=None, user_id: int = Depends(verify_csrf_and_privacy), db=Depends(get_db)):
 
     if quiz_type == "miniQuiz":
         if module_id is None or not (2 <= module_id <= 9):
@@ -671,7 +745,7 @@ class ModuleProgressUpdate(BaseModel):
 
 @app.post("/update-module-progress")
 @limiter.limit("50/minute")
-def update_module_progress(request: Request,module: ModuleProgressUpdate, user_id: int = Depends(verify_csrf), db=Depends(get_db)):
+def update_module_progress(request: Request,module: ModuleProgressUpdate, user_id: int = Depends(verify_csrf_and_privacy), db=Depends(get_db)):
     if module.module_id == 1:
         module_type = "preQuiz"
     elif 2 <= module.module_id <= 9:
@@ -752,7 +826,7 @@ class QuizAnswersUpdate(BaseModel):
 
 @app.post("/update-quiz-answers")
 @limiter.limit("10/minute")
-def update_quiz_answers(request: Request, data: QuizAnswersUpdate, user_id: int = Depends(verify_csrf), db=Depends(get_db)):
+def update_quiz_answers(request: Request, data: QuizAnswersUpdate, user_id: int = Depends(verify_csrf_and_privacy), db=Depends(get_db)):
     user_quiz_answers = db.query(models.UserQuizAnswers).filter(models.UserQuizAnswers.user_id == user_id, models.UserQuizAnswers.module_type ==data.module_type).first()
     if user_quiz_answers is None:
         raise HTTPException(
@@ -785,7 +859,7 @@ class QuizSubmission(BaseModel):
 
 @app.post("/submit-quiz")
 @limiter.limit("5/minute")
-def quiz_submission_check(request: Request, submission: QuizSubmission, user_id: int = Depends(verify_csrf), db=Depends(get_db)): 
+def quiz_submission_check(request: Request, submission: QuizSubmission, user_id: int = Depends(verify_csrf_and_privacy), db=Depends(get_db)): 
     
     quiz_type = submission.quizType
     user_answers_li= submission.answers
@@ -883,7 +957,7 @@ def score_quiz(quiz_type, question_check_results_li):
 
 
 @app.post("/close-post-quiz-review")
-def close_post_quiz_review(user_id: int = Depends(verify_csrf), db=Depends(get_db)):
+def close_post_quiz_review(user_id: int = Depends(verify_csrf_and_privacy), db=Depends(get_db)):
     saved_answers = db.query(models.UserQuizAnswers).filter(
         models.UserQuizAnswers.user_id == user_id,
         models.UserQuizAnswers.module_type == "postQuiz"

@@ -67,6 +67,16 @@ class UserSession(Base):
     expires_at=Column(DateTime(timezone=True), nullable=False)
     csrf_token = Column(String(64), nullable=False)
     
+class PrivacyAcknowledgment(Base):
+    __tablename__ = "privacy_acknowledgments"
 
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    policy_version = Column(String, nullable=False)
+    acknowledged_at = Column(DateTime(timezone=True), nullable=False)
+    
+    __table_args__ = (
+        UniqueConstraint("user_id", "policy_version"),
+    )
 
 

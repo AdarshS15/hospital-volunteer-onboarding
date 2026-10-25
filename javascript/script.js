@@ -355,7 +355,11 @@ async function createUserAccount() {
         console.log("Please enter your first and last name.");
         return;
     }
-
+    const privacyAccepted = document.querySelector("#privacy-accepted").checked;
+    if (!privacyAccepted) {
+        alert("Please acknowledge the Privacy and Data Use Notice before creating an account.");
+        return;
+    }
     async function registerUser(firstName, lastName, email, password) {
         const registerPage = document.querySelector(".create-account-page")
         const response = await fetch(`${API_BASE}/register`, {
@@ -369,7 +373,8 @@ async function createUserAccount() {
                     email: email,
                     password: password,
                     first_name: firstName,
-                    last_name: lastName  
+                    last_name: lastName,
+                    privacy_accepted: privacyAccepted 
                 }
             )
         });
@@ -422,7 +427,7 @@ async function registerUserButtons() {
 Login Page
 =====================================================*/
 async function loginUser() {
-    const loginPage = document.querySelector(".login-page"); // use your actual parent class
+    const loginPage = document.querySelector(".login-page");
     const email = loginPage.querySelector("#email").value.trim();
     const password = loginPage.querySelector("#password").value;
 
@@ -447,12 +452,71 @@ async function loginUser() {
         loginPage.querySelector("#password").value = "";
         return;
     }
-    
-    
-    console.log("Login successful:", result);
-    window.location.href = "../my-modules-page/my-modules.html";
 
+    console.log("Login successful:", result);
+
+    // Check whether the volunteer acknowledged the current privacy policy
+    const privacyResponse = await fetch(`${API_BASE}/privacy-status`, {
+        method: "GET",
+        credentials: "include"
+    });
+
+    if (!privacyResponse.ok) {
+        document.querySelector("#login-error").textContent =
+            "Unable to verify privacy acknowledgment. Please try again.";
+        return;
+    }
+
+    const privacyResult = await privacyResponse.json();
+
+    if (privacyResult.accepted) {
+        window.location.href = "../my-modules-page/my-modules.html";
+    } else {
+        document.querySelector("#privacy-modal").style.display = "flex";
+    }
 }
+async function acceptPrivacyPolicy() {
+    const button = document.querySelector("#privacy-agree");
+    button.disabled = true;
+
+    try {
+        // Get CSRF token from the authenticated session
+        const csrfResponse = await fetch(`${API_BASE}/csrf-token`, {
+            credentials: "include"
+        });
+
+        if (!csrfResponse.ok) {
+            throw new Error("Could not verify your session.");
+        }
+
+        const { csrf_token } = await csrfResponse.json();
+
+        // Record acknowledgment in the database
+        const response = await fetch(`${API_BASE}/accept-privacy`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "X-CSRF-Token": csrf_token
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error("Could not save your acknowledgment.");
+        }
+
+        window.location.href = "../my-modules-page/my-modules.html";
+
+    } catch (error) {
+        console.error(error);
+        alert("Unable to save your acknowledgment. Please try again.");
+        button.disabled = false;
+    }
+}
+
+document.querySelector("#privacy-agree")?.addEventListener(
+    "click",
+    acceptPrivacyPolicy
+);
 
 async function loginUserButtons() {
     const loginUserButton = document.querySelector('.login-page.main .login-button');
