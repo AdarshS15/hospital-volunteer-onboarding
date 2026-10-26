@@ -81,6 +81,40 @@ Volentera uses a full-stack architecture consisting of three primary components:
 
 In production, Nginx serves the frontend and acts as a reverse proxy for API requests to the FastAPI backend. The application is hosted on an AWS EC2 instance and secured with HTTPS.
 
+## Running Locally
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/AdarshS15/hospital-volunteer-onboarding.git
+cd hospital-volunteer-onboarding
+```
+
+### 2. Install Backend Dependencies
+
+```bash
+cd BackendPython
+python -m pip install -r requirements.txt
+```
+
+### 3. Start the Backend Server
+
+```bash
+uvicorn main:app --reload
+```
+
+The backend runs locally at `http://127.0.0.1:8000`.
+
+### 4. Start the Frontend
+
+Serve the project root using a local development server, such as VS Code Live Server, at:
+
+`http://127.0.0.1:5500`
+
+Open `landingPage.html` to access the application.
+
+**Note:** Local development may require environment variables and additional configuration. Production credentials and sensitive configuration files are not included in this repository.
+
 ## Engineering Considerations
 
 ### Adaptive Training
@@ -104,6 +138,7 @@ Password recovery uses randomly generated tokens, stores their SHA-256 hashes, a
 The administrative dashboard provides an overview of volunteer training activity, including assessment performance, module completion, and training status.
 
 This enables volunteer coordinators to monitor onboarding progress through a centralized interface.
+
 
 ## Testing and Validation
 
