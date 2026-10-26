@@ -4,7 +4,7 @@
 
 The platform uses adaptive learning, interactive assessments, and progress tracking to make hospital volunteer training more accessible, personalized, and efficient.
 
-**Live Website:** [https://volentera.com](https://volentera.com)
+**Live Website:** https://volentera.com
 
 ## Overview
 
@@ -57,6 +57,7 @@ Training topics include hospital navigation, patient interactions, emergency pre
 - Passlib and bcrypt password hashing
 - Session-based authentication
 - CSRF protection
+- Secure, HttpOnly session cookies with SameSite=Lax
 - Hashed, expiring password-reset tokens
 - HTTPS encryption
 
@@ -66,7 +67,7 @@ Training topics include hospital navigation, patient interactions, emergency pre
 - Nginx
 - Uvicorn
 - Let's Encrypt SSL/TLS certificates
-- Custom domain: [volentera.com](https://volentera.com)
+- Custom domain: volentera.com
 
 ## Application Architecture
 
@@ -126,7 +127,11 @@ Training activity and assessment results are stored in a relational database, al
 
 ### Authentication and Account Recovery
 
-Passwords are securely hashed, and authentication is managed through sessions. Password recovery uses randomly generated tokens, stores their SHA-256 hashes, and enforces expiration and single-use restrictions.
+Passwords are securely hashed, and authentication is managed through server-side sessions.
+
+Session cookies are configured with `HttpOnly` and `SameSite=Lax`. In production, the `Secure` attribute is enabled through an environment-specific configuration, ensuring session cookies are transmitted only over HTTPS.
+
+Password recovery uses randomly generated tokens, stores their SHA-256 hashes, and enforces expiration and single-use restrictions.
 
 ### Administrative Monitoring
 
@@ -148,16 +153,19 @@ Development and testing have included:
 - Password-reset email delivery and token validation
 - Password changes and rejection of previous credentials
 - HTTPS deployment and custom-domain configuration
+- Production session-cookie security verification
 
 Additional testing, security review, and improvements remain ongoing.
 
 ## Project Status
 
-**Status: Deployed | Hospital Beta Testing**
+**Status: Deployed | Active Hospital Beta Testing**
 
-Volentera is deployed at [https://volentera.com](https://volentera.com) and has been prepared for beta testing in collaboration with St. Anthony North Hospital.
+Volentera is deployed at https://volentera.com and is currently undergoing beta testing with volunteers at St. Anthony North Hospital.
 
-The hospital's volunteer coordinator approved an initial beta involving approximately **46 front desk volunteers**.
+The hospital's volunteer coordinator approved an initial beta involving approximately **46 front desk volunteers**. The platform is being evaluated through volunteer participation, assessment performance, and training progress.
+
+The initial pilot is intended to evaluate the platform's usability, effectiveness, and suitability for hospital volunteer onboarding.
 
 Potential future expansion areas include:
 
@@ -169,13 +177,27 @@ These expansions are prospective and have not yet been implemented.
 
 ## Security and Privacy
 
-Volentera uses HTTPS, password hashing, session-based authentication, and protected backend API endpoints to help secure user accounts and training information.
+Volentera uses HTTPS, password hashing, session-based authentication, CSRF protection, and protected backend API endpoints to help secure user accounts and training information.
+
+Session cookies use the following security attributes:
+
+- **HttpOnly:** Prevents JavaScript from directly accessing authentication cookies.
+- **Secure:** Restricts session-cookie transmission to HTTPS connections in production.
+- **SameSite=Lax:** Helps mitigate certain cross-site request forgery risks.
 
 The repository excludes sensitive development artifacts, including local database files, credentials, and environment configuration.
 
 The platform is intended for volunteer education and onboarding, not patient record management. **No patient information should be entered into the application.**
 
 Security reviews, testing, and improvements remain ongoing as the platform develops.
+
+## AI Usage Disclosure
+
+I used AI-assisted development tools primarily for generating boilerplate code, assisting with security implementations (including CSRF protection, session-based authentication, secure HTTP-only cookies, and authorization checks), debugging technical issues, and configuring AWS EC2 and Nginx for deployment.
+
+I also used AI to help generate standardized quiz questions following consistent patterns due to the large volume of training content required.
+
+I independently developed the application's frontend, core functionality, and adaptive learning system, using AI as a supplementary resource for implementation guidance and troubleshooting.
 
 ## Project Ownership
 
@@ -185,6 +207,6 @@ This repository documents an independent software project and is **not an offici
 
 ---
 
-**Website:** [volentera.com](https://volentera.com)
+**Website:** https://volentera.com
 
-**Repository:** [github.com/AdarshS15/hospital-volunteer-onboarding](https://github.com/AdarshS15/hospital-volunteer-onboarding)
+**Repository:** https://github.com/AdarshS15/hospital-volunteer-onboarding
