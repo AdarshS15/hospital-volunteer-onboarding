@@ -39,16 +39,6 @@ limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# Apply security headers to reduce browser-based risks such as clickjacking and content-type sniffing.
-@app.middleware("http")
-async def security_headers(request: Request, call_next):
-    response = await call_next(request)
-    response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["X-Frame-Options"] = "DENY"
-    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-    response.headers["Content-Security-Policy"] = "frame-ancestors 'none'"
-    return response
-
 
 def get_db():
     db = SessionLocal()
@@ -144,10 +134,6 @@ def get_csrf_token(user_id: int = Depends(get_current_user_id), session_id: str 
 
     return {"csrf_token": session.csrf_token}
 
-
-
-
-
 @app.get("/me")
 def get_me(user_id: int = Depends(get_current_user_id)):
     return {
@@ -184,6 +170,19 @@ def accept_privacy(user_id: int = Depends(verify_csrf), db=Depends(get_db)):
         db.commit()
 
     return {"accepted": True}
+
+# Apply security headers to reduce browser-based risks such as clickjacking and content-type sniffing.
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Content-Security-Policy"] = "frame-ancestors 'none'"
+    return response
+
+
+
 
 
 @app.post("/logout")

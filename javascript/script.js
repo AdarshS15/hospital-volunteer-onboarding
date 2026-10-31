@@ -307,8 +307,16 @@ async function loadQuizReviewData(quizType, moduleID = null) {
 
     const response = await fetch(url, {
         method: "GET",
-        credentials: "include"
+        credentials: "include",
+        headers: {
+            "X-CSRF-Token": csrfToken
+        }
     });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || "Failed to load quiz review.");
+    }
 
     return await response.json();
 }
